@@ -12,7 +12,9 @@ from policy_engine import PolicyEngine, get_graph_context_from_file
 from graph_engine import GraphState, ImpactAnalyzer
 from health_analyzer import HealthImpactAnalyzer
 from explainability import generate_policy_explanation
+from explainability import generate_policy_explanation
 from aqi import register_aqi_routes
+from emission_forecast import register_emission_routes
 import config
 
 
@@ -29,6 +31,7 @@ health_analyzer = HealthImpactAnalyzer()
 
 # Register AQI routes
 register_aqi_routes(app)
+register_emission_routes(app)
 
 
 # ============================================================================

@@ -6,6 +6,7 @@ import {
   useNodesState,
   useEdgesState,
   Controls,
+  ControlButton,
   Background,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -16,6 +17,7 @@ import { initialNodes } from "../data/nodes";
 import { initialEdges } from "../data/edges";
 import { runSimulation } from "./simulation";
 import { LiveAQI } from "./LiveAQI";
+import { EmissionForecast } from "./EmissionForecast";
 import type { NodeTypes } from "@xyflow/react";
 
 const nodeTypes: NodeTypes = {
@@ -124,7 +126,7 @@ export default function CausalGraph() {
       setImpact(snapshot.impact);
       setImpactMessage(
         `Policy: ${policy.name}. CO₂ change: ${snapshot.impact.co2.change_pct.toFixed(1)}%. ` +
-          `AQI change: ${snapshot.impact.aqi.change_pct.toFixed(1)}%.`
+        `AQI change: ${snapshot.impact.aqi.change_pct.toFixed(1)}%.`
       );
     } catch (error) {
       console.error("Error applying policy:", error);
@@ -141,12 +143,12 @@ export default function CausalGraph() {
       const updated = nds.map((n) =>
         n.id === node.id
           ? {
-              ...n,
-              data: {
-                ...n.data,
-                enabled: !n.data.enabled,
-              },
-            }
+            ...n,
+            data: {
+              ...n.data,
+              enabled: !n.data.enabled,
+            },
+          }
           : n
       );
 
@@ -166,39 +168,48 @@ export default function CausalGraph() {
     setNodes((nds) => runSimulation(nds, edges));
   }, [edges, setNodes]);
 
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header - Fixed at top */}
-      <div className="sticky top-0 z-40 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 px-6 py-4 shadow-lg">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🌍</span>
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                Urban CO₂ Digital Twin
-              </h1>
-              <p className="text-sm text-slate-400">Policy Impact Simulator</p>
+    <div className={`w-full min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 ${isFullScreen ? 'relative z-[100]' : ''}`}>
+      {/* Header - Fixed at top (Hidden in Full Screen) */}
+      {!isFullScreen && (
+        <div className="sticky top-0 z-40 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 px-6 py-4 shadow-lg">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🌍</span>
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  Urban CO₂ Digital Twin
+                </h1>
+                <p className="text-sm text-slate-400">Policy Impact Simulator</p>
+              </div>
             </div>
+            <button
+              onClick={() => {
+                setNodes(initialNodes);
+                setEdges(initialEdges);
+                setImpact(null);
+                setPolicy(null);
+                setImpactMessage(
+                  "System reset to baseline. Graph ready for new policies."
+                );
+              }}
+              className="bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            >
+              🔄 Reset
+            </button>
           </div>
-          <button
-            onClick={() => {
-              setNodes(initialNodes);
-              setEdges(initialEdges);
-              setImpact(null);
-              setPolicy(null);
-              setImpactMessage(
-                "System reset to baseline. Graph ready for new policies."
-              );
-            }}
-            className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-          >
-            🔄 Reset
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Graph Container - scrollable, natural height */}
-      <div className="w-full h-96 bg-slate-900 border-b border-slate-700">
+      <div
+        className={`${isFullScreen
+            ? 'fixed inset-0 z-50 w-screen h-screen bg-slate-900'
+            : 'w-full h-96 bg-slate-900 border-b border-slate-700'
+          }`}
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -207,10 +218,42 @@ export default function CausalGraph() {
           onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           fitView
+          colorMode="dark"
         >
-          <Background />
-          <Controls />
+          <Background color="#334155" gap={16} />
+          <Controls
+            className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl overflow-hidden"
+            style={{
+              backgroundColor: '#1a1f26ff',
+              color: '#f8fafc',
+              borderColor: '#334155',
+              '--xy-controls-button-bg': '#1e293b',
+              '--xy-controls-button-bg-hover': '#334155',
+              '--xy-controls-button-color': '#f8fafc',
+              '--xy-controls-button-border-color': '#334155',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '4px'
+            } as React.CSSProperties}
+          >
+            <ControlButton
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
+              style={{ fontWeight: 'bold' }}
+            >
+              {isFullScreen ? "↙" : "↗"}
+            </ControlButton>
+          </Controls>
         </ReactFlow>
+
+      </div>
+      {/* Instructions */}
+      <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-slate-700/50 rounded-lg p-4">
+        <p className="text-xs text-slate-400 text-center">
+          💡 <strong>Tip:</strong> Click on nodes in the graph to
+          disable/enable sectors. Enter a research query and click Generate
+          & Apply to test policies.
+        </p>
       </div>
 
       {/* Bottom Section - Control Panel & Results */}
@@ -242,11 +285,10 @@ export default function CausalGraph() {
                 <button
                   onClick={applyPolicyFromAPI}
                   disabled={loading}
-                  className={`w-full px-4 py-3 rounded-lg font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 ${
-                    loading
+                  className={`w-full px-4 py-3 rounded-lg font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 ${loading
                       ? "bg-slate-600 cursor-not-allowed opacity-60"
                       : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                  }`}
+                    }`}
                 >
                   {loading ? (
                     <>
@@ -284,18 +326,12 @@ export default function CausalGraph() {
             </div>
             {/* <LiveAQI /> */}
             <div className="lg:col-span-3 mt-6">
-                <LiveAQI />
+              <LiveAQI />
+              <EmissionForecast />
             </div>
           </div>
 
-          {/* Instructions */}
-          <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-slate-700/50 rounded-lg p-4">
-            <p className="text-xs text-slate-400 text-center">
-              💡 <strong>Tip:</strong> Click on nodes in the graph to
-              disable/enable sectors. Enter a research query and click Generate
-              & Apply to test policies.
-            </p>
-          </div>
+
         </div>
       </div>
     </div>
