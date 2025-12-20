@@ -1,0 +1,24 @@
+# Core dependencies
+langchain
+langchain-community
+langchain-huggingface
+langchain-google-genai
+pydantic
+
+# LLM & Embeddings
+google-generativeai
+sentence-transformers
+huggingface-hub
+
+# Vector DB
+faiss-cpu
+
+# Web framework
+flask==3.0.0
+flask-cors==4.0.0
+
+# PDF processing
+pypdf==4.1.0
+
+# Utilities
+python-dotenv==1.0.0

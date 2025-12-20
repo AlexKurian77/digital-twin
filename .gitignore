@@ -1,0 +1,39 @@
+# Environment files (top level)
+.env
+.env.local
+.env.*.local
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+
+# Temporary
+.temp/
+*.tmp
+
+# Node modules (if any at root)
+node_modules/
+
+# Python cache (if any at root)
+__pycache__/
+*.pyc
+
+# Any API keys or credentials
+credentials.json
+secrets.json
