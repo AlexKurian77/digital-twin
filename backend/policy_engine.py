@@ -94,7 +94,7 @@ class PolicyEngine:
             google_api_key=config.GEMINI_API_KEY
         )
     
-    def query_research(self, question: str, k: int = None) -> List[str]:
+    def query_research(self, question: str, k: int = None) -> tuple[List[str], bool]:
         """
         Retrieve research chunks from FAISS.
         
@@ -103,40 +103,49 @@ class PolicyEngine:
             k: Number of results (default from config)
             
         Returns:
-            List of research excerpt strings
+            Tuple of (research chunks or [question], is_direct_query)
         """
         if not self.db:
-            print("Warning: FAISS DB not initialized, returning mock results")
-            return [
-                "Mock research: Vehicle emission control has been shown to reduce PM2.5 emissions by 40-60% "
-                "when combined with catalytic converters and particulate filters.",
-                "Mock research: Public transportation investment reduces per-capita emissions by 15-25% "
-                "by shifting demand from private vehicles.",
-                "Mock research: Coal-fired power plants account for 35-45% of urban emissions. "
-                "Retirement of older plants can reduce AQI by 10-20 points."
-            ]
+            print(f"FAISS DB not initialized, using direct query: {question}")
+            # Return the user's query directly when FAISS is not available
+            return [question], True
         
         k = k or config.FAISS_K_SEARCH
         results = self.db.similarity_search(question, k=k)
-        return [r.page_content for r in results]
+        return [r.page_content for r in results], False
     
     def extract_policy(
         self,
         research_chunks: List[str],
-        graph_context: Dict[str, Any]
+        graph_context: Dict[str, Any],
+        is_direct_query: bool = False
     ) -> Policy:
         """
         Use LLM to extract structured policy from research.
         
         Args:
-            research_chunks: List of research excerpts
+            research_chunks: List of research excerpts or [user_query] if direct
             graph_context: Dict with node/edge structure for validation
+            is_direct_query: True if research_chunks contains user query (no FAISS)
             
         Returns:
             Validated Policy object
         """
-        # Format research for prompt
-        formatted_research = "\n---\n".join(research_chunks)
+        # Format content for prompt
+        # Ensure all chunks are strings (handle potential nested lists)
+        flat_chunks = []
+        for chunk in research_chunks:
+            if isinstance(chunk, list):
+                flat_chunks.extend([str(c) for c in chunk])
+            else:
+                flat_chunks.append(str(chunk))
+        
+        if is_direct_query:
+            user_query = flat_chunks[0] if flat_chunks else ""
+            research_section = f"USER QUERY: {user_query}\n\nUse your knowledge to create a policy addressing this query."
+        else:
+            research_section = "RESEARCH FINDINGS:\n" + "\n---\n".join(flat_chunks)
+        
         formatted_nodes = ", ".join(graph_context.get("node_ids", []))
         formatted_edges = "\n".join([
             f"  {e['source']}->{e['target']} (current weight: {e.get('weight', 0.5)})"
@@ -145,8 +154,7 @@ class PolicyEngine:
         
         prompt = f"""You are a climate policy expert. Your task is to design policies that reduce CO₂ and air pollution.
 
-RESEARCH FINDINGS:
-{formatted_research}
+{research_section}
 
 CURRENT SYSTEM EDGES (with current weights):
 {formatted_edges}
@@ -177,7 +185,7 @@ CORRECT EXAMPLES:
   ✓ Change transport→vehicle-emissions from 0.7 to 0.49 (30% reduction)
   ✓ Change energy→co2 from 0.8 to 0.48 (40% reduction)
 
-TASK: Create ONE policy to address: "{formatted_research[:100]}..."
+TASK: Create ONE policy to address: "{flat_chunks[0][:100] if flat_chunks else 'emissions reduction'}..."
 
 Return ONLY valid JSON:
 {{
@@ -218,6 +226,22 @@ Return ONLY valid JSON:
         
         json_str = json_match.group()
         policy_dict = json.loads(json_str)
+        
+        # Clean up trade_offs - LLM sometimes returns strings instead of objects
+        if 'trade_offs' in policy_dict:
+            cleaned_trade_offs = []
+            for item in policy_dict['trade_offs']:
+                if isinstance(item, str):
+                    # Convert string to proper TradeOff object
+                    cleaned_trade_offs.append({
+                        'sector': 'general',
+                        'impact': 'neutral',
+                        'magnitude': 'mild',
+                        'description': item
+                    })
+                elif isinstance(item, dict):
+                    cleaned_trade_offs.append(item)
+            policy_dict['trade_offs'] = cleaned_trade_offs
         
         # Validate against schema
         policy = Policy(**policy_dict)

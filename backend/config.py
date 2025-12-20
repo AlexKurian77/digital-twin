@@ -2,6 +2,10 @@
 Configuration for the policy engine.
 """
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 from pathlib import Path
 
 # Paths
@@ -10,7 +14,6 @@ FAISS_INDEX_PATH = BASE_DIR / "faiss_index"
 GRAPH_STATE_PATH = BASE_DIR / "graph_state.json"
 SCENARIOS_PATH = BASE_DIR / "scenarios.json"
 
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 AMBEE_DATA_KEY = os.getenv("AMBEE_DATA_KEY", "")
 # LLM Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")

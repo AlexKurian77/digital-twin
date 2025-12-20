@@ -100,14 +100,14 @@ def generate_policy():
         if not query:
             return jsonify({'error': 'Missing research_query'}), 400
         
-        # Retrieve research
-        research_chunks = policy_engine.query_research(query, k=3)
+        # Retrieve research (or use direct query if FAISS not available)
+        research_chunks, is_direct_query = policy_engine.query_research(query, k=3)
         
         # Get graph context for validation
         graph_context = get_graph_context_from_file(str(config.GRAPH_STATE_PATH))
         
         # Extract policy via LLM
-        policy = policy_engine.extract_policy(research_chunks, graph_context)
+        policy = policy_engine.extract_policy(research_chunks, graph_context, is_direct_query)
         
         return jsonify({
             'status': 'success',
