@@ -52,7 +52,7 @@ logs/
 *.db
 *.sqlite
 *.sqlite3
-faiss_index/
+
 *.cache
 
 # Node (if any Node modules in backend)
