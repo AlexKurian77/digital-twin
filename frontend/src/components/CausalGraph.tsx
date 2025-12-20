@@ -283,6 +283,9 @@ export default function CausalGraph() {
               )}
             </div>
             {/* <LiveAQI /> */}
+            <div className="lg:col-span-3 mt-6">
+                <LiveAQI />
+            </div>
           </div>
 
           {/* Instructions */}

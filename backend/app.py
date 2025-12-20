@@ -10,6 +10,7 @@ import traceback
 
 from policy_engine import PolicyEngine, get_graph_context_from_file
 from graph_engine import GraphState, ImpactAnalyzer
+from health_analyzer import HealthImpactAnalyzer
 from explainability import generate_policy_explanation
 from aqi import register_aqi_routes
 import config
@@ -22,8 +23,9 @@ import config
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
 
-# Initialize policy engine
+# Initialize engines
 policy_engine = PolicyEngine()
+health_analyzer = HealthImpactAnalyzer()
 
 # Register AQI routes
 register_aqi_routes(app)
@@ -100,14 +102,14 @@ def generate_policy():
         if not query:
             return jsonify({'error': 'Missing research_query'}), 400
         
-        # Retrieve research (or use direct query if FAISS not available)
-        research_chunks, is_direct_query = policy_engine.query_research(query, k=3)
+        # Retrieve research
+        research_chunks = policy_engine.query_research(query, k=3)
         
         # Get graph context for validation
         graph_context = get_graph_context_from_file(str(config.GRAPH_STATE_PATH))
         
         # Extract policy via LLM
-        policy = policy_engine.extract_policy(research_chunks, graph_context, is_direct_query)
+        policy = policy_engine.extract_policy(research_chunks, graph_context, user_query=query)
         
         return jsonify({
             'status': 'success',
@@ -325,6 +327,84 @@ def explain_policy():
     except Exception as e:
         print(f"Error in explain_policy: {e}")
         traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/analyze-aqi-health', methods=['POST'])
+def analyze_aqi_health():
+    """
+    Analyze health impacts based on AQI data.
+    
+    Request body:
+    {
+        "aqi_data": {
+            "aqi": 410,
+            "city": "Delhi",
+            "pm2_5": 250,
+            "pm10": 400,
+            "no2": 85,
+            "o3": 45,
+            "so2": 15,
+            "co": 1.5
+        }
+    }
+    
+    Response:
+    {
+        "health_impact": { Health analysis from Gemini },
+        "status": "success",
+        "timestamp": "..."
+    }
+    """
+    try:
+        data = request.json
+        aqi_data = data.get('aqi_data')
+        
+        if not aqi_data:
+            return jsonify({'error': 'Missing aqi_data'}), 400
+        
+        # Analyze health impact
+        health_impact = health_analyzer.analyze_aqi_health(aqi_data)
+        
+        return jsonify({
+            'health_impact': health_impact,
+            'status': 'success',
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        print(f"Error analyzing AQI health: {e}")
+        print(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/chat-health', methods=['POST'])
+def chat_health():
+    """
+    Chat with health expert.
+    
+    Request:
+    {
+        "message": "Should I wear a mask?",
+        "context": { "aqi": 350, "city": "Delhi", ... }
+    }
+    """
+    try:
+        data = request.json
+        message = data.get('message')
+        context = data.get('context', {})
+        
+        if not message:
+            return jsonify({'error': 'Missing message'}), 400
+            
+        response = health_analyzer.chat_with_health_expert(message, context)
+        
+        return jsonify({
+            'response': response,
+            'status': 'success'
+        })
+    except Exception as e:
+        print(f"Error in chat_health: {e}")
         return jsonify({'error': str(e)}), 500
 
 
