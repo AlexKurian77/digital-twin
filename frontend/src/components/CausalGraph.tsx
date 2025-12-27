@@ -168,33 +168,22 @@ export default function CausalGraph() {
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header - Fixed at top */}
-      <div className="sticky top-0 z-40 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 px-6 py-4 shadow-lg">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🌍</span>
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                Urban CO₂ Digital Twin
-              </h1>
-              <p className="text-sm text-slate-400">Policy Impact Simulator</p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              setNodes(initialNodes);
-              setEdges(initialEdges);
-              setImpact(null);
-              setPolicy(null);
-              setImpactMessage(
-                "System reset to baseline. Graph ready for new policies."
-              );
-            }}
-            className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-          >
-            🔄 Reset
-          </button>
-        </div>
+      {/* Reset Button - Top Right */}
+      <div className="flex justify-end px-6 py-4">
+        <button
+          onClick={() => {
+            setNodes(initialNodes);
+            setEdges(initialEdges);
+            setImpact(null);
+            setPolicy(null);
+            setImpactMessage(
+              "System reset to baseline. Graph ready for new policies."
+            );
+          }}
+          className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+        >
+          🔄 Reset
+        </button>
       </div>
 
       {/* Graph Container - scrollable, natural height */}
