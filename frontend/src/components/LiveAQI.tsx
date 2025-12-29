@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HealthImpact } from './HealthImpact';
+import { CloudFog, RefreshCcw } from 'lucide-react';
 
 interface AQIData {
   aqi: number;  // 0-500 scale from Ambee
@@ -14,7 +15,7 @@ interface AQIData {
   source?: string;
 }
 
-export function LiveAQI() {
+export function LiveAQI({ onAqiUpdate }: { onAqiUpdate?: (aqi: number) => void }) {
   const [aqi, setAqi] = useState<AQIData | null>(null);
 
   const fetchAQI = async () => {
@@ -23,7 +24,7 @@ export function LiveAQI() {
       if (!response.ok) {
         console.error(`API error: ${response.status}. Using mock data for development.`);
         // Fallback mock data for development
-        setAqi({
+        const mockData = {
           aqi: 50,
           aqi_category: 'Good',
           pm2_5: 12.5,
@@ -32,16 +33,20 @@ export function LiveAQI() {
           no2: 28.5,
           so2: 8.1,
           co: 0.5
-        });
+        };
+        setAqi(mockData);
+        if (onAqiUpdate) onAqiUpdate(mockData.aqi);
         return;
       }
       const data = await response.json();
       setAqi(data);
+      if (onAqiUpdate) onAqiUpdate(data.aqi);
     } catch (error) {
       console.error('Failed to fetch AQI data:', error);
       console.log('Backend not running? Make sure to run: cd backend && python app.py');
+      console.log('Backend not running? Make sure to run: cd backend && python app.py');
       // Fallback mock data for development
-      setAqi({
+      const mockData = {
         aqi: 50,
         aqi_category: 'Good',
         pm2_5: 12.5,
@@ -50,7 +55,9 @@ export function LiveAQI() {
         no2: 28.5,
         so2: 8.1,
         co: 0.5
-      });
+      };
+      setAqi(mockData);
+      if (onAqiUpdate) onAqiUpdate(mockData.aqi);
     }
   };
 
@@ -58,7 +65,7 @@ export function LiveAQI() {
     const initializeAQI = async () => {
       await fetchAQI();
     };
-    
+
     initializeAQI();
     const interval = setInterval(fetchAQI, 600000); // Refresh every 10 min
     return () => {
@@ -68,20 +75,22 @@ export function LiveAQI() {
 
   const getAQIColor = (aqi: number) => {
     // AQI 0-500 scale
-    if (aqi <= 50) return 'bg-green-500';     // Good
-    if (aqi <= 100) return 'bg-yellow-500';   // Fair
-    if (aqi <= 150) return 'bg-orange-500';   // Moderate
-    if (aqi <= 200) return 'bg-red-500';      // Poor
-    return 'bg-red-500';                    // Very Poor
+    if (aqi <= 50) return '#22c55e';     // Good
+    if (aqi <= 100) return '#eab308';   // Satisfactory
+    if (aqi <= 150) return '#f97316';   // Moderate
+    if (aqi <= 200) return '#ef4444';   // Poor
+    if (aqi <= 300) return '#a855f7'; // Very Poor
+    return '#991b1b';                // Severe
   };
 
   const getAQILabel = (aqi: number) => {
     // AQI 0-500 scale with standard AQI categories
     if (aqi <= 50) return 'Good';
-    if (aqi <= 100) return 'Fair';
+    if (aqi <= 100) return 'Satisfactory';
     if (aqi <= 150) return 'Moderate';
     if (aqi <= 200) return 'Poor';
-    return 'Very Poor';
+    if (aqi <= 300) return 'Very Poor';
+    return 'Severe';
   };
 
   if (!aqi) return <div className="text-slate-400">Loading AQI...</div>;
@@ -90,19 +99,22 @@ export function LiveAQI() {
     <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <span>🌫️</span>
+          <CloudFog className="w-5 h-5" />
           Live AQI
         </h3>
         <button
           onClick={fetchAQI}
-          className="text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white"
+          className="text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white flex items-center gap-1"
         >
-          🔄 Refresh
+          <RefreshCcw className="w-3 h-3" /> Refresh
         </button>
       </div>
 
       {/* Main AQI Index */}
-      <div className={`${getAQIColor(aqi.aqi)} rounded-lg p-4 mb-4 text-white`}>
+      <div
+        className="rounded-lg p-4 mb-4 text-white"
+        style={{ backgroundColor: getAQIColor(aqi.aqi) }}
+      >
         <div className="text-3xl font-bold">{getAQILabel(aqi.aqi)}</div>
         <div className="text-sm opacity-90">AQI: {Math.round(aqi.aqi)}/500</div>
       </div>
@@ -126,7 +138,7 @@ export function LiveAQI() {
           <div className="text-white font-bold">{aqi.o3.toFixed(1)}</div>
         </div>
       </div>
-      
+
       {/* AI Health Analysis */}
       <HealthImpact aqiData={aqi} />
     </div>

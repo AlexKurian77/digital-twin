@@ -1,4 +1,5 @@
 import React from "react";
+import { ClipboardList, Target, BarChart2 } from "lucide-react";
 
 interface Impact {
   co2: {
@@ -49,7 +50,7 @@ export function ImpactPanel({ impact, policy }: ImpactPanelProps) {
       {policy && (
         <div className="mb-4 p-4 bg-slate-900/50 border border-slate-600 rounded-lg">
           <div className="flex items-start gap-3 mb-2">
-            <span className="text-xl">📋</span>
+            <ClipboardList className="w-6 h-6 text-slate-400" />
             <div className="flex-1">
               <h4 className="font-bold text-white text-md">{policy.name}</h4>
               <p className="text-slate-300 text-sm mt-1">{policy.description}</p>
@@ -63,8 +64,8 @@ export function ImpactPanel({ impact, policy }: ImpactPanelProps) {
         </div>
       )}
 
-      <div className="flex items-center mb-4">
-        <span className="text-2xl mr-2">🎯</span>
+      <div className="flex items-center mb-4 gap-2">
+        <Target className="w-6 h-6 text-blue-400" />
         <h3 className="text-lg font-bold text-white">Impact Analysis</h3>
       </div>
 
@@ -74,9 +75,8 @@ export function ImpactPanel({ impact, policy }: ImpactPanelProps) {
           <div className="flex justify-between items-start mb-3">
             <span className="font-semibold text-sm text-blue-300 uppercase tracking-wide">CO₂ Emissions</span>
             <span
-              className={`text-lg font-bold tabular-nums ${
-                co2Change < 0 ? "text-emerald-400" : "text-rose-400"
-              }`}
+              className={`text-lg font-bold tabular-nums ${co2Change < 0 ? "text-emerald-400" : "text-rose-400"
+                }`}
             >
               {co2Change > 0 ? "+" : ""}
               {co2Change.toFixed(1)}%
@@ -86,9 +86,9 @@ export function ImpactPanel({ impact, policy }: ImpactPanelProps) {
             {impact.co2.baseline.toFixed(0)} → {impact.co2.post_policy.toFixed(0)}
           </div>
           <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-500" 
-              style={{width: Math.min(100, Math.max(20, (impact.co2.post_policy / Math.max(impact.co2.baseline, impact.co2.post_policy)) * 100)) + '%'}}
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-500"
+              style={{ width: Math.min(100, Math.max(20, (impact.co2.post_policy / Math.max(impact.co2.baseline, impact.co2.post_policy)) * 100)) + '%' }}
             ></div>
           </div>
         </div>
@@ -98,9 +98,8 @@ export function ImpactPanel({ impact, policy }: ImpactPanelProps) {
           <div className="flex justify-between items-start mb-3">
             <span className="font-semibold text-sm text-orange-300 uppercase tracking-wide">Air Quality Index</span>
             <span
-              className={`text-lg font-bold tabular-nums ${
-                aiqChange < 0 ? "text-emerald-400" : "text-rose-400"
-              }`}
+              className={`text-lg font-bold tabular-nums ${aiqChange < 0 ? "text-emerald-400" : "text-rose-400"
+                }`}
             >
               {aiqChange > 0 ? "+" : ""}
               {aiqChange.toFixed(1)}%
@@ -110,9 +109,9 @@ export function ImpactPanel({ impact, policy }: ImpactPanelProps) {
             {impact.aqi.baseline.toFixed(0)} → {impact.aqi.post_policy.toFixed(0)}
           </div>
           <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-orange-500 to-orange-400 transition-all duration-500" 
-              style={{width: Math.min(100, Math.max(20, (impact.aqi.post_policy / Math.max(impact.aqi.baseline, impact.aqi.post_policy)) * 100)) + '%'}}
+            <div
+              className="h-full bg-gradient-to-r from-orange-500 to-orange-400 transition-all duration-500"
+              style={{ width: Math.min(100, Math.max(20, (impact.aqi.post_policy / Math.max(impact.aqi.baseline, impact.aqi.post_policy)) * 100)) + '%' }}
             ></div>
           </div>
         </div>
@@ -147,17 +146,18 @@ export function ImpactPanel({ impact, policy }: ImpactPanelProps) {
       {/* Most Affected Sectors */}
       {impact.cascade_analysis.most_affected_nodes.length > 0 && (
         <div className="mt-4 pt-4 border-t border-slate-700">
-          <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wide mb-3">📊 Most Affected Sectors</h4>
+          <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wide mb-3 flex items-center gap-2">
+            <BarChart2 className="w-4 h-4" /> Most Affected Sectors
+          </h4>
           <div className="flex flex-wrap gap-2">
             {impact.cascade_analysis.most_affected_nodes.slice(0, 10).map(
               ([nodeId, change]) => (
                 <div
                   key={nodeId}
-                  className={`px-3 py-2 rounded-lg border text-xs font-mono transition-all duration-200 ${
-                    change < 0
+                  className={`px-3 py-2 rounded-lg border text-xs font-mono transition-all duration-200 ${change < 0
                       ? "bg-emerald-900/30 border-emerald-700/50 text-emerald-300"
                       : "bg-rose-900/30 border-rose-700/50 text-rose-300"
-                  }`}
+                    }`}
                 >
                   <div className="font-semibold">{nodeId}</div>
                   <div className="text-xs opacity-90">

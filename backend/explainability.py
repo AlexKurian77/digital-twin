@@ -19,7 +19,6 @@ class ExplanationGenerator:
             policy: Policy dict with mutations
             research_chunks: List of research excerpts supporting the policy
         """
-        print(config.GROQ_API_KEY)
         self.policy = policy
         self.research = research_chunks
         self.llm = ChatGroq(

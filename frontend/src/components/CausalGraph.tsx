@@ -16,7 +16,6 @@ import CausalNode from "./nodes/CausalNode";
 import { initialNodes } from "../data/nodes";
 import { initialEdges } from "../data/edges";
 import { runSimulation } from "./simulation";
-import { LiveAQI } from "./LiveAQI";
 import { EmissionForecast } from "./EmissionForecast";
 import type { NodeTypes } from "@xyflow/react";
 
@@ -172,42 +171,13 @@ export default function CausalGraph() {
 
   return (
     <div className={`w-full min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 ${isFullScreen ? 'relative z-[100]' : ''}`}>
-      {/* Header - Fixed at top (Hidden in Full Screen) */}
-      {!isFullScreen && (
-        <div className="sticky top-0 z-40 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 px-6 py-4 shadow-lg">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🌍</span>
-              <div>
-                <h1 className="text-2xl font-bold text-white">
-                  Urban CO₂ Digital Twin
-                </h1>
-                <p className="text-sm text-slate-400">Policy Impact Simulator</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setNodes(initialNodes);
-                setEdges(initialEdges);
-                setImpact(null);
-                setPolicy(null);
-                setImpactMessage(
-                  "System reset to baseline. Graph ready for new policies."
-                );
-              }}
-              className="bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-            >
-              🔄 Reset
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Graph Container - scrollable, natural height */}
       <div
         className={`${isFullScreen
-            ? 'fixed inset-0 z-50 w-screen h-screen bg-slate-900'
-            : 'w-full h-96 bg-slate-900 border-b border-slate-700'
+          ? 'fixed inset-0 z-50 w-screen h-screen bg-slate-900 z-100'
+          : 'w-full h-96 bg-slate-900 border-b border-slate-700'
           }`}
       >
         <ReactFlow
@@ -286,8 +256,8 @@ export default function CausalGraph() {
                   onClick={applyPolicyFromAPI}
                   disabled={loading}
                   className={`w-full px-4 py-3 rounded-lg font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 ${loading
-                      ? "bg-slate-600 cursor-not-allowed opacity-60"
-                      : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                    ? "bg-slate-600 cursor-not-allowed opacity-60"
+                    : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                     }`}
                 >
                   {loading ? (
@@ -324,9 +294,8 @@ export default function CausalGraph() {
                 </div>
               )}
             </div>
-            {/* <LiveAQI /> */}
             <div className="lg:col-span-3 mt-6">
-              <LiveAQI />
+              {/* <LiveAQI /> */}
               <EmissionForecast />
             </div>
           </div>

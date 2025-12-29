@@ -136,11 +136,49 @@ class EmissionForecaster:
     
     def forecast_days(self, n_days):
         n_days = max(1, min(365, n_days))
-        forecasts = self._forecast_daily(n_days)
+        
+        # Calculate gap from last data point to today
+        last_date = self.df_features['Date'].iloc[-1]
+        today = pd.Timestamp(datetime.now().date())
+        days_gap = (today - last_date).days
+        
+        # If there is a gap, extend forecast to cover it + requested days
+        total_days = n_days
+        if days_gap > 0:
+            total_days += days_gap
+            
+        forecasts = self._forecast_daily(total_days)
+        
+        # Determine history length: match n_days (requested forecast length)
+        # Note: 'n_days' here is the requested length, 'total_days' includes gap fill.
+        # User wants "previous 30 days if we choose 30", so we use original n_days.
+        history_days = n_days
+        
+        # Get historical data
+        history_data = []
+        if self.df is not None and not self.df.empty:
+            hist_df = self.df.tail(history_days)
+            for _, row in hist_df.iterrows():
+                # Calculate sector values from percentages
+                sector_breakdown = {}
+                for col in self.sector_cols:
+                    sector_name = col.replace(' (%)', '').replace(' ', '_')
+                    # If column exists in row, use it, otherwise use average
+                    pct = row[col] if col in row else self.avg_sectors.get(col, 0)
+                    sector_breakdown[sector_name] = round(row[self.target_col] * pct / 100, 4)
+
+                history_data.append({
+                    'date': row['Date'].strftime('%Y-%m-%d'),
+                    'emission': round(row[self.target_col], 4),
+                    'sectors': sector_breakdown,
+                    'is_historical': True
+                })
+
         return {
             'type': 'daily',
             'days': n_days,
             'forecasts': forecasts,
+            'history': history_data,
             'metrics': self.metrics,
             'sector_percentages': {k.replace(' (%)', ''): round(v, 2) for k, v in self.avg_sectors.items()}
         }

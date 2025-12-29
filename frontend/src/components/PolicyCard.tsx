@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { ChevronDown, ChevronRight, BookOpen, RefreshCw, Library, Users, AlertTriangle, Link, Loader2 } from "lucide-react";
 
 interface PolicyMutation {
   type: string;
@@ -96,9 +97,8 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
 
   return (
     <div
-      className={`rounded-lg border-l-4 border-blue-500 p-4 mb-4 transition-all ${
-        expanded ? "bg-white shadow-lg" : "bg-gradient-to-r from-blue-50 to-emerald-50"
-      }`}
+      className={`rounded-lg border-l-4 border-blue-500 p-4 mb-4 transition-all ${expanded ? "bg-white shadow-lg" : "bg-gradient-to-r from-blue-50 to-emerald-50"
+        }`}
     >
       {/* Header / Collapsed View */}
       <div className="flex justify-between items-start mb-3">
@@ -112,18 +112,17 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
           onClick={() => setExpanded(!expanded)}
           className="text-2xl ml-4 text-gray-500 hover:text-gray-700"
         >
-          {expanded ? "▼" : "▶"}
+          {expanded ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
         </button>
       </div>
 
       {/* Quick Impact Stats */}
       <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
         <div
-          className={`p-2 rounded ${
-            policy.estimated_impacts.co2_reduction_pct > 0
+          className={`p-2 rounded ${policy.estimated_impacts.co2_reduction_pct > 0
               ? "bg-green-100 text-green-700"
               : "bg-red-100 text-red-700"
-          }`}
+            }`}
         >
           <div className="font-semibold">
             {policy.estimated_impacts.co2_reduction_pct.toFixed(1)}% CO₂
@@ -131,11 +130,10 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
           <div className="text-xs">reduction expected</div>
         </div>
         <div
-          className={`p-2 rounded ${
-            policy.estimated_impacts.aqi_improvement_pct > 0
+          className={`p-2 rounded ${policy.estimated_impacts.aqi_improvement_pct > 0
               ? "bg-green-100 text-green-700"
               : "bg-red-100 text-red-700"
-          }`}
+            }`}
         >
           <div className="font-semibold">
             {policy.estimated_impacts.aqi_improvement_pct.toFixed(1)}% AQI
@@ -150,7 +148,9 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
           {/* Explanation Intro */}
           {explanation && (
             <div>
-              <h4 className="font-semibold text-sm mb-2">📖 Overview</h4>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <BookOpen className="w-4 h-4" /> Overview
+              </h4>
               <p className="text-sm text-gray-700 leading-relaxed">
                 {explanation.narrative_intro}
               </p>
@@ -160,7 +160,9 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
           {/* Per-Mutation Explanations */}
           {explanation && explanation.mutations.length > 0 && (
             <div>
-              <h4 className="font-semibold text-sm mb-2">🔄 Policy Actions</h4>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <RefreshCw className="w-4 h-4" /> Policy Actions
+              </h4>
               <div className="space-y-3">
                 {explanation.mutations.map((mut, idx) => (
                   <div
@@ -185,7 +187,9 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
                     {/* Supporting Research */}
                     {mut.supporting_research.length > 0 && (
                       <div className="bg-yellow-50 p-2 rounded text-xs border-l-2 border-yellow-300 mb-2">
-                        <strong>📚 Research Backing:</strong>
+                        <strong className="flex items-center gap-1">
+                          <Library className="w-3 h-3" /> Research Backing:
+                        </strong>
                         <p className="mt-1 italic text-gray-700">
                           "{mut.supporting_research[0].substring(0, 120)}..."
                         </p>
@@ -195,7 +199,9 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
                     {/* Stakeholders */}
                     {mut.affected_stakeholders.length > 0 && (
                       <div className="text-xs text-gray-600">
-                        <strong>👥 Affects:</strong>
+                        <strong className="flex items-center gap-1">
+                          <Users className="w-3 h-3" /> Affects:
+                        </strong>
                         <ul className="mt-1 space-y-1">
                           {mut.affected_stakeholders.slice(0, 3).map(
                             (stakeholder, sidx) => (
@@ -219,7 +225,9 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
           {/* Trade-offs */}
           {policy.trade_offs.length > 0 && (
             <div>
-              <h4 className="font-semibold text-sm mb-2">⚠️ Trade-offs</h4>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-orange-500" /> Trade-offs
+              </h4>
               <ul className="text-sm space-y-2">
                 {policy.trade_offs.map((tradeoff, idx) => (
                   <li
@@ -228,11 +236,10 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
                   >
                     <strong>{tradeoff.sector}</strong>
                     <span
-                      className={`ml-2 text-xs font-semibold ${
-                        tradeoff.impact === "negative"
+                      className={`ml-2 text-xs font-semibold ${tradeoff.impact === "negative"
                           ? "text-red-600"
                           : "text-green-600"
-                      }`}
+                        }`}
                     >
                       ({tradeoff.impact})
                     </span>
@@ -246,7 +253,9 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
           {/* Research Evidence */}
           {policy.source_research.key_quotes.length > 0 && (
             <div>
-              <h4 className="font-semibold text-sm mb-2">🔗 Research Evidence</h4>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <Link className="w-4 h-4" /> Research Evidence
+              </h4>
               <div className="space-y-2">
                 {policy.source_research.key_quotes.slice(0, 2).map(
                   (quote, idx) => (
@@ -282,8 +291,8 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
 
           {/* Loading State */}
           {loadingExplanation && (
-            <div className="text-center text-sm text-gray-500">
-              ⏳ Loading detailed explanations...
+            <div className="flex items-center justify-center gap-2 text-gray-500">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading detailed explanations...
             </div>
           )}
         </div>

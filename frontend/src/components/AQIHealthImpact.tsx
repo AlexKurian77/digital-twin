@@ -2,6 +2,19 @@
 
 import { useState } from "react";
 import { aqiCategories, type AQICategory } from "../data/aqiHealthData";
+import {
+  Baby,
+  Smile,
+  Users,
+  PersonStanding,
+  User,
+  Hospital,
+  AlertTriangle,
+  Activity,
+  Shield,
+  Check
+} from "lucide-react";
+import { LiveAQI } from "./LiveAQI";
 
 function AQISelector({
   categories,
@@ -20,11 +33,10 @@ function AQISelector({
           <button
             key={category.id}
             onClick={() => onSelect(category)}
-            className={`px-5 py-3 rounded-xl font-bold transition-all duration-300 border-2 ${
-              isSelected
-                ? "scale-105 shadow-xl ring-2 ring-white/30"
-                : "hover:scale-102 hover:shadow-lg opacity-80 hover:opacity-100"
-            }`}
+            className={`px-5 py-3 rounded-xl font-bold transition-all duration-300 border-2 ${isSelected
+              ? "scale-105 shadow-xl ring-2 ring-white/30"
+              : "hover:scale-102 hover:shadow-lg opacity-80 hover:opacity-100"
+              }`}
             style={{
               backgroundColor: isSelected ? category.color : `${category.color}33`,
               borderColor: category.color,
@@ -49,15 +61,15 @@ function VulnerableGroupCard({
   effects: string[];
   accentColor: string;
 }) {
-  const icons: Record<string, string> = {
-    "Newborns & Children": "👶",
-    "Children": "🧒",
-    "Infants": "👶",
-    "Infants & Children": "👶",
-    "Pregnant Women": "🤰",
-    "Elderly": "👴",
-    "Pre-existing Conditions": "🏥",
-    "General Population": "👥",
+  const icons: Record<string, React.ReactNode> = {
+    "Newborns & Children": <Baby className="w-6 h-6" />,
+    "Children": <Smile className="w-6 h-6" />,
+    "Infants": <Baby className="w-6 h-6" />,
+    "Infants & Children": <Baby className="w-6 h-6" />,
+    "Pregnant Women": <PersonStanding className="w-6 h-6" />,
+    "Elderly": <User className="w-6 h-6" />,
+    "Pre-existing Conditions": <Hospital className="w-6 h-6" />,
+    "General Population": <Users className="w-6 h-6" />,
   };
 
   return (
@@ -66,7 +78,7 @@ function VulnerableGroupCard({
       style={{ borderLeftColor: accentColor, borderLeftWidth: "4px" }}
     >
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-2xl">{icons[group] || "👤"}</span>
+        <span className="text-2xl">{icons[group] || <User className="w-6 h-6" />}</span>
         <h4 className="font-bold text-white">{group}</h4>
       </div>
       <ul className="space-y-2">
@@ -85,6 +97,23 @@ export default function AQIHealthImpact() {
   const [selectedCategory, setSelectedCategory] = useState<AQICategory>(
     aqiCategories[0]
   );
+
+  const handleAqiUpdate = (aqi: number) => {
+    // Find category that matches the AQI range
+    // Mappings: 0-50, 51-100, 101-200, 201-300, 301-400, 401+
+    const categoryId =
+      aqi <= 50 ? "good" :
+        aqi <= 100 ? "satisfactory" :
+          aqi <= 150 ? "moderate" :
+            aqi <= 200 ? "poor" :
+              aqi <= 300 ? "very-poor" :
+                "severe";
+
+    const matchedCategory = aqiCategories.find(c => c.id === categoryId);
+    if (matchedCategory && matchedCategory.id !== selectedCategory.id) {
+      setSelectedCategory(matchedCategory);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -113,6 +142,11 @@ export default function AQIHealthImpact() {
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 py-10">
+        {/* Live Data Section */}
+        <div className="mb-12">
+          <LiveAQI onAqiUpdate={handleAqiUpdate} />
+        </div>
+
         {/* Category Header */}
         <div
           className={`bg-gradient-to-br ${selectedCategory.bgColor} border ${selectedCategory.borderColor} rounded-2xl p-6 mb-8 transition-all duration-500`}
@@ -144,7 +178,7 @@ export default function AQIHealthImpact() {
             {selectedCategory.lifeExpectancyImpact && (
               <div className="bg-red-500/20 border border-red-500/30 rounded-xl px-4 py-3 max-w-md">
                 <div className="flex items-center gap-2 text-red-400 font-semibold text-sm mb-1">
-                  <span>⚠️</span>
+                  <AlertTriangle className="w-4 h-4" />
                   <span>Life Expectancy Impact</span>
                 </div>
                 <p className="text-red-300 text-sm">{selectedCategory.lifeExpectancyImpact}</p>
@@ -156,7 +190,7 @@ export default function AQIHealthImpact() {
         {/* Physiological Impact */}
         <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6 mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-2xl">🫁</span>
+            <Activity className="w-6 h-6" />
             <h3 className="text-xl font-bold text-white">Physiological Impact</h3>
           </div>
           <p className="text-slate-300 leading-relaxed text-lg">
@@ -167,7 +201,7 @@ export default function AQIHealthImpact() {
         {/* Vulnerable Groups Grid */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-2xl">👥</span>
+            <Users className="w-6 h-6" />
             <h3 className="text-xl font-bold text-white">Vulnerable Groups</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -185,7 +219,7 @@ export default function AQIHealthImpact() {
         {/* Safeguards */}
         <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/30 rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-2xl">🛡️</span>
+            <Shield className="w-6 h-6" />
             <h3 className="text-xl font-bold text-white">Recommended Safeguards</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -194,7 +228,7 @@ export default function AQIHealthImpact() {
                 key={idx}
                 className="flex items-center gap-3 bg-slate-800/50 rounded-lg px-4 py-3"
               >
-                <span className="text-blue-400">✓</span>
+                <Check className="w-4 h-4 text-blue-400" />
                 <span className="text-slate-300">{safeguard}</span>
               </div>
             ))}

@@ -37,3 +37,6 @@ __pycache__/
 # Any API keys or credentials
 credentials.json
 secrets.json
+
+# Frontend worktrees
+frontend.worktrees/

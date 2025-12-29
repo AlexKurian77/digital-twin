@@ -2,11 +2,66 @@
 
 import { useState } from "react";
 import { solutionCategories, type Solution, type SolutionCategory } from "../data/solutionsData";
+import {
+  Globe,
+  Building2,
+  Dna,
+  Atom,
+  Trees,
+  Sun,
+  Shield,
+  Wind,
+  Layers,
+  Lightbulb,
+  Zap,
+  Waves,
+  Leaf,
+  Droplet,
+  Wifi,
+  CloudRain,
+  Plane,
+  Bus,
+  Rocket,
+  Sparkles
+} from "lucide-react";
 
 interface ImpactResult {
   co2: { baseline: number; post_policy: number; change_pct: number };
   aqi: { baseline: number; post_policy: number; change_pct: number };
 }
+
+const getCategoryIcon = (id: string) => {
+  switch (id) {
+    case 'geo-engineering': return <Globe className="w-6 h-6" />;
+    case 'infrastructure': return <Building2 className="w-6 h-6" />;
+    case 'bio-engineering': return <Dna className="w-6 h-6" />;
+    case 'physics-active': return <Atom className="w-6 h-6" />;
+    default: return <Globe className="w-6 h-6" />;
+  }
+};
+
+const getSolutionIcon = (id: string) => {
+  switch (id) {
+    case 'artificial-forest': return <Trees className="w-8 h-8" />;
+    case 'solar-updraft': return <Sun className="w-8 h-8" />;
+    case 'city-dome': return <Shield className="w-8 h-8" />;
+    case 'wind-corridors': return <Wind className="w-8 h-8" />;
+    case 'photocatalytic-skins': return <Layers className="w-8 h-8" />;
+    case 'smart-streetlights': return <Lightbulb className="w-8 h-8" />;
+    case 'urban-sequoia': return <Building2 className="w-8 h-8" />;
+    case 'kinetic-speed-bumps': return <Zap className="w-8 h-8" />;
+    case 'algae-curtains': return <Waves className="w-8 h-8" />;
+    case 'supercharged-plants': return <Leaf className="w-8 h-8" />;
+    case 'liquid-trees': return <Droplet className="w-8 h-8" />;
+    case 'aura-towers': return <Wind className="w-8 h-8" />;
+    case 'laser-zapping': return <Wifi className="w-8 h-8" />;
+    case 'cloud-seeding': return <CloudRain className="w-8 h-8" />;
+    case 'jet-engines': return <Plane className="w-8 h-8" />;
+    case 'bus-filters': return <Bus className="w-8 h-8" />;
+    case 'drone-swarms': return <Rocket className="w-8 h-8" />;
+    default: return <Sparkles className="w-8 h-8" />;
+  }
+};
 
 function CategoryTabs({
   categories,
@@ -25,17 +80,16 @@ function CategoryTabs({
           <button
             key={cat.id}
             onClick={() => onSelect(cat)}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${
-              isSelected
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${isSelected
                 ? "scale-105 shadow-xl text-white"
                 : "bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 border-slate-600 hover:border-slate-500"
-            }`}
+              }`}
             style={{
               backgroundColor: isSelected ? cat.color : undefined,
               borderColor: isSelected ? cat.color : undefined,
             }}
           >
-            <span className="text-xl">{cat.icon}</span>
+            <span>{getCategoryIcon(cat.id)}</span>
             <span>{cat.name}</span>
           </button>
         );
@@ -65,17 +119,16 @@ function SolutionCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{solution.icon}</span>
+          <span className="text-3xl text-slate-200">{getSolutionIcon(solution.id)}</span>
           <h3 className="text-lg font-bold text-white">{solution.name}</h3>
         </div>
         <button
           onClick={() => onApply(solution)}
           disabled={isApplying}
-          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${
-            isApplying
+          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${isApplying
               ? "bg-slate-600 text-slate-400 cursor-not-allowed"
               : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-          }`}
+            }`}
         >
           {isApplying ? "⏳ Applying..." : "▶ Apply"}
         </button>
@@ -144,7 +197,7 @@ function ImpactModal({
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-600 rounded-2xl p-6 max-w-lg w-full shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">{solution.icon}</span>
+            <span className="text-3xl text-slate-200">{getSolutionIcon(solution.id)}</span>
             <div>
               <h3 className="text-xl font-bold text-white">{solution.name}</h3>
               <p className="text-sm text-slate-400">Policy Applied Successfully</p>
@@ -256,11 +309,12 @@ export default function SolutionsCatalog() {
       {/* Hero */}
       <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto px-6 py-10 text-center">
-          <h2 className="text-3xl font-bold text-white mb-3">
-            🔬 Innovative Solutions Catalog
+          <h2 className="text-3xl font-bold text-white mb-3 flex items-center justify-center gap-3">
+            <Sparkles className="w-8 h-8 text-blue-400" />
+            Innovative Solutions Catalog
           </h2>
           <p className="text-slate-400 max-w-2xl mx-auto">
-            Explore cutting-edge technologies and approaches for urban air quality improvement. 
+            Explore cutting-edge technologies and approaches for urban air quality improvement.
             Click "Apply" to simulate each solution's impact on the city.
           </p>
         </div>
@@ -284,7 +338,7 @@ export default function SolutionsCatalog() {
           }}
         >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{selectedCategory.icon}</span>
+            <span className="text-2xl text-slate-200">{getCategoryIcon(selectedCategory.id)}</span>
             <div>
               <h3 className="font-bold text-white">{selectedCategory.name}</h3>
               <p className="text-slate-400 text-sm">{selectedCategory.description}</p>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ImpactPanel } from "./ImpactPanel";
+import { BarChart2, Trophy, Loader2, Play, LineChart } from "lucide-react";
 
 interface Scenario {
   id: string;
@@ -80,7 +81,7 @@ export function ScenarioComparison() {
             policy_queries: scenario.policy_queries,
           };
         })
-        .filter(Boolean);
+        .filter((s): s is { name: string; policy_queries: string[] } => s !== null);
 
       // For each scenario, generate policies and combine them
       const comparisonResults: ComparisonResult[] = [];
@@ -136,14 +137,14 @@ export function ScenarioComparison() {
       if (comparisonResults.length > 0) {
         const bestCO2 = comparisonResults.reduce((prev, current) =>
           Math.abs(current.impact.co2.change_pct) >
-          Math.abs(prev.impact.co2.change_pct)
+            Math.abs(prev.impact.co2.change_pct)
             ? current
             : prev
         );
 
         const bestAQI = comparisonResults.reduce((prev, current) =>
           Math.abs(current.impact.aqi.change_pct) >
-          Math.abs(prev.impact.aqi.change_pct)
+            Math.abs(prev.impact.aqi.change_pct)
             ? current
             : prev
         );
@@ -166,7 +167,9 @@ export function ScenarioComparison() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">📊 Scenario Comparison</h1>
+          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+            <BarChart2 className="w-10 h-10 text-blue-600" /> Scenario Comparison
+          </h1>
           <p className="text-gray-600">
             Compare different policy approaches side-by-side to understand
             their system-wide impact.
@@ -187,11 +190,10 @@ export function ScenarioComparison() {
                       : [...prev, scenario.id]
                   )
                 }
-                className={`p-4 rounded-lg border-2 transition-all text-left ${
-                  selectedScenarios.includes(scenario.id)
-                    ? "border-blue-500 bg-blue-50 shadow-md"
-                    : "border-gray-300 bg-white hover:border-gray-400"
-                }`}
+                className={`p-4 rounded-lg border-2 transition-all text-left ${selectedScenarios.includes(scenario.id)
+                  ? "border-blue-500 bg-blue-50 shadow-md"
+                  : "border-gray-300 bg-white hover:border-gray-400"
+                  }`}
               >
                 <div className="text-lg font-bold mb-1">
                   {scenario.display_name}
@@ -221,13 +223,20 @@ export function ScenarioComparison() {
           <button
             onClick={handleCompare}
             disabled={loading || selectedScenarios.length === 0}
-            className={`px-8 py-3 rounded-lg font-semibold text-white transition-all ${
-              loading || selectedScenarios.length === 0
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 shadow-lg"
-            }`}
+            className={`px-8 py-3 rounded-lg font-semibold text-white transition-all ${loading || selectedScenarios.length === 0
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 shadow-lg"
+              }`}
           >
-            {loading ? "⏳ Comparing..." : "▶ Compare Selected Scenarios"}
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" /> Comparing...
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Play className="w-5 h-5" /> Compare Selected Scenarios
+              </div>
+            )}
           </button>
         </div>
 
@@ -237,7 +246,9 @@ export function ScenarioComparison() {
             {/* Ranking Summary */}
             {ranking && (
               <div className="bg-white rounded-lg p-6 shadow-lg border-l-4 border-green-500">
-                <h3 className="text-xl font-bold mb-4">🏆 Rankings</h3>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Trophy className="w-6 h-6 text-yellow-500" /> Rankings
+                </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded">
                     <div className="text-sm text-gray-600 mb-1">
@@ -274,7 +285,9 @@ export function ScenarioComparison() {
 
             {/* Detailed Comparison Table */}
             <div className="bg-white rounded-lg p-6 shadow-lg overflow-x-auto">
-              <h3 className="text-lg font-bold mb-4">📈 Detailed Comparison</h3>
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <LineChart className="w-6 h-6 text-blue-500" /> Detailed Comparison
+              </h3>
               <table className="w-full text-sm">
                 <thead className="border-b-2 border-gray-300">
                   <tr>
@@ -294,21 +307,19 @@ export function ScenarioComparison() {
                     >
                       <td className="p-3 font-semibold">{result.name}</td>
                       <td
-                        className={`text-center p-3 font-bold ${
-                          result.impact.co2.change_pct < 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
+                        className={`text-center p-3 font-bold ${result.impact.co2.change_pct < 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                          }`}
                       >
                         {result.impact.co2.change_pct > 0 ? "+" : ""}
                         {result.impact.co2.change_pct.toFixed(1)}%
                       </td>
                       <td
-                        className={`text-center p-3 font-bold ${
-                          result.impact.aqi.change_pct < 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
+                        className={`text-center p-3 font-bold ${result.impact.aqi.change_pct < 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                          }`}
                       >
                         {result.impact.aqi.change_pct > 0 ? "+" : ""}
                         {result.impact.aqi.change_pct.toFixed(1)}%
