@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ImpactPanel } from "./ImpactPanel";
 import { BarChart2, Trophy, Loader2, Play, LineChart } from "lucide-react";
+import { API_BASE_URL } from '../config';
 
 interface Scenario {
   id: string;
@@ -92,7 +93,7 @@ export function ScenarioComparison() {
           const policies = [];
           for (const query of scenario.policy_queries) {
             const genResponse = await fetch(
-              "http://localhost:5000/api/generate-policy",
+              `${API_BASE_URL}/api/generate-policy`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -110,7 +111,7 @@ export function ScenarioComparison() {
           // For MVP, we'll apply the first policy (can be extended to combine)
           if (policies.length > 0) {
             const applyResponse = await fetch(
-              "http://localhost:5000/api/apply-policy",
+              `${API_BASE_URL}/api/apply-policy`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

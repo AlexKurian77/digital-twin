@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight, BookOpen, RefreshCw, Library, Users, AlertTriangle, Link, Loader2 } from "lucide-react";
+import { API_BASE_URL } from '../config';
 
 interface PolicyMutation {
   type: string;
@@ -68,7 +69,7 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
   const loadExplanation = async () => {
     setLoadingExplanation(true);
     try {
-      const response = await fetch("http://localhost:5000/api/explain-policy", {
+      const response = await fetch(`${API_BASE_URL}/api/explain-policy`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -120,8 +121,8 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
       <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
         <div
           className={`p-2 rounded ${policy.estimated_impacts.co2_reduction_pct > 0
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
+            ? "bg-green-100 text-green-700"
+            : "bg-red-100 text-red-700"
             }`}
         >
           <div className="font-semibold">
@@ -131,8 +132,8 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
         </div>
         <div
           className={`p-2 rounded ${policy.estimated_impacts.aqi_improvement_pct > 0
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
+            ? "bg-green-100 text-green-700"
+            : "bg-red-100 text-red-700"
             }`}
         >
           <div className="font-semibold">
@@ -237,8 +238,8 @@ export function PolicyCard({ policy, researchEvidence = [] }: PolicyCardProps) {
                     <strong>{tradeoff.sector}</strong>
                     <span
                       className={`ml-2 text-xs font-semibold ${tradeoff.impact === "negative"
-                          ? "text-red-600"
-                          : "text-green-600"
+                        ? "text-red-600"
+                        : "text-green-600"
                         }`}
                     >
                       ({tradeoff.impact})

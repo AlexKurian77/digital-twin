@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../config';
 import { HealthImpact } from './HealthImpact';
 import { CloudFog, RefreshCcw } from 'lucide-react';
 
@@ -18,9 +19,11 @@ interface AQIData {
 export function LiveAQI({ onAqiUpdate }: { onAqiUpdate?: (aqi: number) => void }) {
   const [aqi, setAqi] = useState<AQIData | null>(null);
 
+
+
   const fetchAQI = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/aqi?lat=28.7041&lon=77.1025');
+      const response = await fetch(`${API_BASE_URL}/api/aqi?lat=28.7041&lon=77.1025`);
       if (!response.ok) {
         console.error(`API error: ${response.status}. Using mock data for development.`);
         // Fallback mock data for development

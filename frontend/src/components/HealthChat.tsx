@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { MessageSquare, Send } from 'lucide-react';
 
 interface ChatMessage {
@@ -24,6 +25,8 @@ export function HealthChat({ aqiContext }: HealthChatProps) {
     scrollToBottom();
   }, [messages]);
 
+
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -33,7 +36,7 @@ export function HealthChat({ aqiContext }: HealthChatProps) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/chat-health', {
+      const response = await fetch(`${API_BASE_URL}/api/chat-health`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -89,8 +92,8 @@ export function HealthChat({ aqiContext }: HealthChatProps) {
             >
               <div
                 className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${msg.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-800 text-slate-200 border border-slate-700'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-800 text-slate-200 border border-slate-700'
                   }`}
               >
                 {msg.text}

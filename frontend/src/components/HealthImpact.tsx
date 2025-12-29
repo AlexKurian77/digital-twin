@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HealthChat } from './HealthChat';
 import { Stethoscope, Shield, Zap } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 interface HealthImpactData {
   aqi_level: number;
@@ -45,7 +46,7 @@ export function HealthImpact({ aqiData }: HealthImpactProps) {
       setError(null);
 
       try {
-        const response = await fetch('http://localhost:5000/api/analyze-aqi-health', {
+        const response = await fetch(`${API_BASE_URL}/api/analyze-aqi-health`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -11,6 +11,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { ImpactPanel } from "./ImpactPanel";
+import { API_BASE_URL } from '../config';
 
 import CausalNode from "./nodes/CausalNode";
 import { initialNodes } from "../data/nodes";
@@ -64,7 +65,7 @@ export default function CausalGraph() {
     try {
       // Step 1: Generate policy from research query
       const generateResponse = await fetch(
-        "http://localhost:5000/api/generate-policy",
+        `${API_BASE_URL}/api/generate-policy`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -83,7 +84,7 @@ export default function CausalGraph() {
 
       // Step 2: Apply policy to graph
       const applyResponse = await fetch(
-        "http://localhost:5000/api/apply-policy",
+        `${API_BASE_URL}/api/apply-policy`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

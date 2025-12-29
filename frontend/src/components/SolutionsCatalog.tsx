@@ -24,6 +24,7 @@ import {
   Rocket,
   Sparkles
 } from "lucide-react";
+import { API_BASE_URL } from '../config';
 
 interface ImpactResult {
   co2: { baseline: number; post_policy: number; change_pct: number };
@@ -81,8 +82,8 @@ function CategoryTabs({
             key={cat.id}
             onClick={() => onSelect(cat)}
             className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${isSelected
-                ? "scale-105 shadow-xl text-white"
-                : "bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 border-slate-600 hover:border-slate-500"
+              ? "scale-105 shadow-xl text-white"
+              : "bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 border-slate-600 hover:border-slate-500"
               }`}
             style={{
               backgroundColor: isSelected ? cat.color : undefined,
@@ -126,8 +127,8 @@ function SolutionCard({
           onClick={() => onApply(solution)}
           disabled={isApplying}
           className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${isApplying
-              ? "bg-slate-600 text-slate-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            ? "bg-slate-600 text-slate-400 cursor-not-allowed"
+            : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             }`}
         >
           {isApplying ? "⏳ Applying..." : "▶ Apply"}
@@ -282,7 +283,8 @@ export default function SolutionsCatalog() {
       };
 
       // Call backend apply-policy endpoint
-      const response = await fetch("http://localhost:5000/api/apply-policy", {
+      // Call backend apply-policy endpoint
+      const response = await fetch(`${API_BASE_URL}/api/apply-policy`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ policy }),

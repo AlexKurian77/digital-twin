@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-
+import { API_BASE_URL } from '@/src/config';
 export async function GET(request: NextRequest) {
   try {
     const lat = request.nextUrl.searchParams.get('lat') || '40.7128';
     const lon = request.nextUrl.searchParams.get('lon') || '-74.0060';
 
     const response = await fetch(
-      `http://localhost:5000/api/aqi?lat=${lat}&lon=${lon}`,
+      `${API_BASE_URL}/api/aqi?lat=${lat}&lon=${lon}`,
       { cache: 'no-store' }
     );
 
