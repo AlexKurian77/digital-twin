@@ -4,7 +4,7 @@ Links mutations to research evidence and identifies trade-offs.
 """
 import json
 from typing import List, Dict, Any, Optional
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 import config
 
 
@@ -19,14 +19,15 @@ class ExplanationGenerator:
             policy: Policy dict with mutations
             research_chunks: List of research excerpts supporting the policy
         """
-        print(config.GEMINI_API_KEY)
+        print(config.GROQ_API_KEY)
         self.policy = policy
         self.research = research_chunks
-        self.llm = ChatGoogleGenerativeAI(
+        self.llm = ChatGroq(
             model=config.LLM_MODEL,
-            temperature=0.5,  # Higher for narrative generation
-            google_api_key=config.GEMINI_API_KEY
+            temperature=0.5,
+            api_key=config.GROQ_API_KEY
         )
+
     
     def generate_full_explanation(self) -> Dict[str, Any]:
         """

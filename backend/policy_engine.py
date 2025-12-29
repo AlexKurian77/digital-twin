@@ -8,7 +8,7 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, ValidationError, Field
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 
 import config
@@ -88,11 +88,12 @@ class PolicyEngine:
             print(f"Error: {e}")
             self.db = None
         
-        self.llm = ChatGoogleGenerativeAI(
+        self.llm = ChatGroq(
             model=config.LLM_MODEL,
-            temperature=config.LLM_TEMPERATURE,
-            google_api_key=config.GEMINI_API_KEY
+            temperature=0.5,
+            api_key=config.GROQ_API_KEY
         )
+
     
     def query_research(self, question: str, k: int = None) -> tuple[List[str], bool]:
         """
@@ -118,7 +119,8 @@ class PolicyEngine:
         self,
         research_chunks: List[str],
         graph_context: Dict[str, Any],
-        is_direct_query: bool = False
+        is_direct_query: bool = False,
+        user_query: str = ""
     ) -> Policy:
         """
         Use LLM to extract structured policy from research.
@@ -127,6 +129,7 @@ class PolicyEngine:
             research_chunks: List of research excerpts or [user_query] if direct
             graph_context: Dict with node/edge structure for validation
             is_direct_query: True if research_chunks contains user query (no FAISS)
+            user_query: The original user query string (optional but recommended)
             
         Returns:
             Validated Policy object
@@ -140,11 +143,16 @@ class PolicyEngine:
             else:
                 flat_chunks.append(str(chunk))
         
+        # Determine intent from user_query if available, otherwise check chunks
+        query_text = user_query if user_query else (flat_chunks[0] if flat_chunks else "")
+        query_lower = query_text.lower()
+        
+        increase_emissions = any(word in query_lower for word in ["increase", "raise", "boost", "expand", "grow", "worsen", "high"])
+        
         if is_direct_query:
-            user_query = flat_chunks[0] if flat_chunks else ""
-            research_section = f"USER QUERY: {user_query}\n\nUse your knowledge to create a policy addressing this query."
+            research_section = f"USER QUERY: {query_text}\n\nUse your knowledge to create a policy addressing this query."
         else:
-            research_section = "RESEARCH FINDINGS:\n" + "\n---\n".join(flat_chunks)
+            research_section = f"USER QUERY: {query_text}\n\nRESEARCH FINDINGS:\n" + "\n---\n".join(flat_chunks)
         
         formatted_nodes = ", ".join(graph_context.get("node_ids", []))
         formatted_edges = "\n".join([
@@ -152,7 +160,36 @@ class PolicyEngine:
             for e in graph_context.get("edges", [])
         ])
         
-        prompt = f"""You are a climate policy expert. Your task is to design policies that reduce CO₂ and air pollution.
+        # Determine policy direction
+        if increase_emissions:
+            task_description = "INCREASE emissions"
+            mutation_type = "increase_edge_weight"
+            mechanics_section = """TO INCREASE EMISSIONS:
+  - MUST increase the edge weight to a LARGER number
+  - Example: 0.7 → 0.9 (increases flow by 28%)
+  - Example: 0.5 → 0.75 (increases flow by 50%)
+  - Example: 0.4 → 0.7 (increases flow by 75%)
+
+CRITICAL: new_weight MUST BE GREATER THAN current weight. Do not decrease!"""
+            correct_examples = """  ✓ Change transport→vehicle-emissions from 0.7 to 0.9 (increases flow)
+  ✓ Change energy→co2 from 0.8 to 0.95 (increases propagation)"""
+            estimated_field = "co2_increase_pct"
+        else:
+            task_description = "REDUCE emissions"
+            mutation_type = "reduce_edge_weight"
+            mechanics_section = """TO REDUCE EMISSIONS:
+  - MUST decrease the edge weight to a SMALLER number
+  - Example: 0.7 → 0.35 (50% reduction in flow)
+  - Example: 0.5 → 0.25 (50% reduction in flow)
+  - Example: 0.8 → 0.4 (50% reduction in flow)
+
+CRITICAL: new_weight MUST BE LESS THAN current weight. Do not increase!"""
+            correct_examples = """  ✓ Change transport→vehicle-emissions from 0.7 to 0.35 (cuts in half)
+  ✓ Change transport→vehicle-emissions from 0.7 to 0.49 (30% reduction)
+  ✓ Change energy→co2 from 0.8 to 0.48 (40% reduction)"""
+            estimated_field = "co2_reduction_pct"
+        
+        prompt = f"""You are a climate policy expert. Your task is to design policies that {task_description}.
 
 {research_section}
 
@@ -161,31 +198,30 @@ CURRENT SYSTEM EDGES (with current weights):
 
 Available nodes: {formatted_nodes}
 
-EMISSION REDUCTION MECHANICS - READ CAREFULLY:
+EMISSION MECHANICS - READ CAREFULLY:
 The system propagates emissions through edges. Each edge has a weight (0.0 to 1.0):
   - target_value = source_value × weight
   - A weight of 0.7 means 70% of the source value flows to the target
   - A weight of 0.3 means 30% of the source value flows to the target
 
-TO REDUCE EMISSIONS:
-  - MUST decrease the edge weight to a SMALLER number
-  - Example: 0.7 → 0.35 (50% reduction in flow)
-  - Example: 0.5 → 0.25 (50% reduction in flow)
-  - Example: 0.8 → 0.4 (50% reduction in flow)
+{mechanics_section}
 
-CRITICAL: new_weight MUST BE LESS THAN current weight. Do not increase!
+CRITICAL INSTRUCTION:
+1. You MUST follow the TASK direction ({task_description}).
+2. If the user asks to INCREASE emissions, you MUST generate a policy that INCREASES them (e.g., "Subsidize Diesel", "Remove Filters"), even if the research discusses reducing them.
+3. Ignore research advice if it contradicts the goal to {task_description}.
+4. Use the research only for context on *what* to modify, but reverse the action if needed to match the goal.
 
 WRONG EXAMPLES (DO NOT DO THIS):
-  ✗ Change 0.7 to 0.75 (increases from 0.7)
-  ✗ Change 0.5 to 0.8 (increases from 0.5)
-  ✗ Change 0.6 to 0.7 (increases from 0.6)
+  ✗ Change 0.7 to 0.75 (wrong direction)
+  ✗ Change 0.5 to 0.8 (wrong direction)
+  ✗ Change 0.6 to 0.7 (wrong direction)
 
 CORRECT EXAMPLES:
-  ✓ Change transport→vehicle-emissions from 0.7 to 0.35 (cuts in half)
-  ✓ Change transport→vehicle-emissions from 0.7 to 0.49 (30% reduction)
-  ✓ Change energy→co2 from 0.8 to 0.48 (40% reduction)
+{correct_examples}
 
-TASK: Create ONE policy to address: "{flat_chunks[0][:100] if flat_chunks else 'emissions reduction'}..."
+TASK: Create ONE policy to {task_description} by addressing: "{flat_chunks[0][:100] if flat_chunks else 'emissions policy'}..."
+If the research suggests "Promoting EV", and your task is to INCREASE emissions, your policy should be "Tax EVs / Promote Gas Cars".
 
 Return ONLY valid JSON:
 {{
@@ -194,17 +230,17 @@ Return ONLY valid JSON:
   "description": "Description",
   "mutations": [
     {{
-      "type": "reduce_edge_weight",
+      "type": "{mutation_type}",
       "source": "transport",
       "target": "vehicle-emissions",
-      "new_weight": 0.35,
+      "new_weight": {"0.35" if not increase_emissions else "0.9"},
       "original_weight": 0.7,
       "reason": "Research shows..."
     }}
   ],
   "estimated_impacts": {{
-    "co2_reduction_pct": 15.0,
-    "aqi_improvement_pct": 18.0,
+    "{estimated_field}": {"15.0" if not increase_emissions else "12.0"},
+    "aqi_improvement_pct": {"18.0" if not increase_emissions else "-15.0"},
     "confidence": 0.8
   }},
   "trade_offs": [],

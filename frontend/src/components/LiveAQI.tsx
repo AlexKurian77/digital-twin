@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { HealthImpact } from './HealthImpact';
 
 interface AQIData {
   aqi: number;  // 0-500 scale from Ambee
@@ -125,6 +126,9 @@ export function LiveAQI() {
           <div className="text-white font-bold">{aqi.o3.toFixed(1)}</div>
         </div>
       </div>
+      
+      {/* AI Health Analysis */}
+      <HealthImpact aqiData={aqi} />
     </div>
   );
 }
