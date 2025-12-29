@@ -44,7 +44,6 @@ export function LiveAQI({ onAqiUpdate }: { onAqiUpdate?: (aqi: number) => void }
     } catch (error) {
       console.error('Failed to fetch AQI data:', error);
       console.log('Backend not running? Make sure to run: cd backend && python app.py');
-      console.log('Backend not running? Make sure to run: cd backend && python app.py');
       // Fallback mock data for development
       const mockData = {
         aqi: 50,
@@ -74,22 +73,21 @@ export function LiveAQI({ onAqiUpdate }: { onAqiUpdate?: (aqi: number) => void }
   }, []);
 
   const getAQIColor = (aqi: number) => {
-    // AQI 0-500 scale
-    if (aqi <= 50) return '#22c55e';     // Good
-    if (aqi <= 100) return '#eab308';   // Satisfactory
-    if (aqi <= 150) return '#f97316';   // Moderate
-    if (aqi <= 200) return '#ef4444';   // Poor
-    if (aqi <= 300) return '#a855f7'; // Very Poor
-    return '#991b1b';                // Severe
+    // Standard AQI Scale (India/global mix adaptation)
+    if (aqi <= 50) return '#22c55e';      // Good
+    if (aqi <= 100) return '#eab308';     // Satisfactory
+    if (aqi <= 200) return '#f97316';     // Moderate
+    if (aqi <= 300) return '#ef4444';     // Poor
+    if (aqi <= 400) return '#a855f7';     // Very Poor
+    return '#991b1b';                     // Severe
   };
 
   const getAQILabel = (aqi: number) => {
-    // AQI 0-500 scale with standard AQI categories
     if (aqi <= 50) return 'Good';
     if (aqi <= 100) return 'Satisfactory';
-    if (aqi <= 150) return 'Moderate';
-    if (aqi <= 200) return 'Poor';
-    if (aqi <= 300) return 'Very Poor';
+    if (aqi <= 200) return 'Moderate';
+    if (aqi <= 300) return 'Poor';
+    if (aqi <= 400) return 'Very Poor';
     return 'Severe';
   };
 

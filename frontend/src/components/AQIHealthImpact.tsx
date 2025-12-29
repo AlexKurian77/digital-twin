@@ -20,20 +20,30 @@ function AQISelector({
   categories,
   selected,
   onSelect,
+  currentAQI
 }: {
   categories: AQICategory[];
   selected: AQICategory;
   onSelect: (category: AQICategory) => void;
+  currentAQI: number | null;
 }) {
   return (
     <div className="flex flex-wrap gap-3 justify-center">
       {categories.map((category) => {
         const isSelected = selected.id === category.id;
+
+        // Parsing ranges like "0-50", "401-500+"
+        const rangeParts = category.range.split('-');
+        const min = parseInt(rangeParts[0]);
+        const max = rangeParts[1].includes('+') ? Infinity : parseInt(rangeParts[1]);
+
+        const isCurrent = currentAQI !== null && currentAQI >= min && currentAQI <= max;
+
         return (
           <button
             key={category.id}
             onClick={() => onSelect(category)}
-            className={`px-5 py-3 rounded-xl font-bold transition-all duration-300 border-2 ${isSelected
+            className={`relative px-5 py-3 rounded-xl font-bold transition-all duration-300 border-2 ${isSelected
               ? "scale-105 shadow-xl ring-2 ring-white/30"
               : "hover:scale-102 hover:shadow-lg opacity-80 hover:opacity-100"
               }`}
@@ -43,6 +53,12 @@ function AQISelector({
               color: isSelected ? "white" : category.color,
             }}
           >
+            {isCurrent && (
+              <span className="absolute -top-2 -right-2 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-slate-900"></span>
+              </span>
+            )}
             <div className="text-sm font-semibold">{category.name}</div>
             <div className="text-xs opacity-80">AQI {category.range}</div>
           </button>
@@ -97,16 +113,19 @@ export default function AQIHealthImpact() {
   const [selectedCategory, setSelectedCategory] = useState<AQICategory>(
     aqiCategories[0]
   );
+  const [currentAqiValue, setCurrentAqiValue] = useState<number | null>(null);
 
   const handleAqiUpdate = (aqi: number) => {
+    setCurrentAqiValue(aqi);
+
     // Find category that matches the AQI range
     // Mappings: 0-50, 51-100, 101-200, 201-300, 301-400, 401+
     const categoryId =
       aqi <= 50 ? "good" :
         aqi <= 100 ? "satisfactory" :
-          aqi <= 150 ? "moderate" :
-            aqi <= 200 ? "poor" :
-              aqi <= 300 ? "very-poor" :
+          aqi <= 200 ? "moderate" :
+            aqi <= 300 ? "poor" :
+              aqi <= 400 ? "very-poor" :
                 "severe";
 
     const matchedCategory = aqiCategories.find(c => c.id === categoryId);
@@ -116,7 +135,22 @@ export default function AQIHealthImpact() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative">
+
+      {/* Fixed Live AQI Indicator */}
+      {currentAqiValue !== null && (
+        <div className="fixed top-24 right-6 z-50 bg-slate-900/90 backdrop-blur-md border border-slate-700 px-4 py-2 rounded-full shadow-2xl flex items-center gap-3">
+          <div className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" style={{backgroundColor: currentAqiValue <= 100 ? "#22c55e" : "#ef4444"}}></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" style={{backgroundColor: currentAqiValue <= 100 ? "#22c55e" : "#ef4444"}}></span>
+          </div>
+          <div className="text-sm font-bold text-white">
+            <span className="opacity-70 mr-2">Live AQI:</span>
+            {Math.round(currentAqiValue)}
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <div
         className={`bg-gradient-to-br ${selectedCategory.bgColor} border-b ${selectedCategory.borderColor} transition-all duration-500`}
@@ -136,16 +170,13 @@ export default function AQIHealthImpact() {
             categories={aqiCategories}
             selected={selectedCategory}
             onSelect={setSelectedCategory}
+            currentAQI={currentAqiValue}
           />
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 py-10">
-        {/* Live Data Section */}
-        <div className="mb-12">
-          <LiveAQI onAqiUpdate={handleAqiUpdate} />
-        </div>
 
         {/* Category Header */}
         <div
@@ -217,7 +248,7 @@ export default function AQIHealthImpact() {
         </div>
 
         {/* Safeguards */}
-        <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/30 rounded-2xl p-6">
+        <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/30 rounded-2xl p-6 mb-12">
           <div className="flex items-center gap-3 mb-4">
             <Shield className="w-6 h-6" />
             <h3 className="text-xl font-bold text-white">Recommended Safeguards</h3>
@@ -233,6 +264,12 @@ export default function AQIHealthImpact() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Live Data Section (Moved to Bottom) */}
+        <div className="mt-16 pt-8 border-t border-slate-800">
+          <h3 className="text-lg font-semibold text-slate-400 mb-4">Live Data Source</h3>
+          <LiveAQI onAqiUpdate={handleAqiUpdate} />
         </div>
       </div>
     </div>

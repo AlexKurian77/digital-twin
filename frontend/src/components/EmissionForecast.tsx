@@ -56,12 +56,12 @@ export function EmissionForecast() {
                 const processedHistory = history.map((d: any) => ({
                     ...d,
                     emission_hist: d.emission,
-                    emission_pred: undefined
+                    emission_pred: null
                 }));
 
                 const processedForecast = forecasts.map((d: any) => ({
                     ...d,
-                    emission_hist: undefined,
+                    emission_hist: null,
                     emission_pred: d.emission
                 }));
 
@@ -69,7 +69,7 @@ export function EmissionForecast() {
                 if (lastHistory) {
                     processedForecast.unshift({
                         ...lastHistory,
-                        emission_hist: undefined,
+                        emission_hist: null,
                         emission_pred: lastHistory.emission,
                         is_connection: true // Flag to potentially hide dot
                     });
@@ -163,6 +163,7 @@ export function EmissionForecast() {
                             strokeWidth={3}
                             dot={(props: any) => {
                                 if (props.payload.is_connection) return <></>;
+                                if (props.payload.emission_pred === null || props.payload.emission_pred === undefined) return <></>;
                                 return <circle cx={props.cx} cy={props.cy} r={4} stroke={props.stroke} strokeWidth={2} fill="#fff" />
                             }}
                             activeDot={{ r: 6 }}
