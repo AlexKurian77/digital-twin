@@ -40,3 +40,4 @@ secrets.json
 
 # Frontend worktrees
 frontend.worktrees/
+backend/
