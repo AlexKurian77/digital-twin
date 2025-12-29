@@ -16,6 +16,7 @@ from explainability import generate_policy_explanation
 from aqi import register_aqi_routes
 from emission_forecast import register_emission_routes
 import config
+import os
 
 
 # ============================================================================
@@ -430,5 +431,6 @@ def internal_error(error):
 # ============================================================================
 
 if __name__ == '__main__':
-    print(f"🚀 Policy Engine API starting on port {config.FLASK_PORT}")
-    app.run(debug=config.FLASK_DEBUG, port=config.FLASK_PORT, host='0.0.0.0')
+    port = int(os.environ.get("PORT", config.FLASK_PORT))
+    print(f"🚀 Policy Engine API starting on port {port}")
+    app.run(debug=config.FLASK_DEBUG, port=port, host='0.0.0.0')
