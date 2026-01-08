@@ -1,104 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { HealthChat } from './HealthChat';
-import { Stethoscope, Shield, Zap } from 'lucide-react';
-import { API_BASE_URL } from '../config';
-
-interface HealthImpactData {
-  aqi_level: number;
-  category: string;
-  risk_summary: string;
-  age_specific_impacts: {
-    newborns: string;
-    children: string;
-    teenagers_young_adults: string;
-    adults_36_65: string;
-    elderly: string;
-  };
-  pregnancy_risks: string;
-  pre_existing_conditions: {
-    asthma: string;
-    diabetes: string;
-    cardiovascular: string;
-  };
-  immediate_actions: string[];
-  long_term_risk: {
-    life_expectancy_loss: string;
-    chronic_conditions: string;
-  };
-  safeguard_protocols: string[];
-  urgency_level: "Low" | "Medium" | "High" | "Critical";
-}
+import { Stethoscope, Shield, Zap, Sparkles } from 'lucide-react';
+import { useGlobalState } from '../context/GlobalStateContext';
 
 interface HealthImpactProps {
   aqiData: any;
 }
 
 export function HealthImpact({ aqiData }: HealthImpactProps) {
-  const [healthData, setHealthData] = useState<HealthImpactData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { healthAnalysis, isAnalyzing, generateHealthAnalysis } = useGlobalState();
 
-  useEffect(() => {
-    const fetchHealthImpact = async () => {
-      if (!aqiData) return;
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/analyze-aqi-health`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ aqi_data: aqiData }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch health analysis');
-        }
-
-        const data = await response.json();
-        if (data.health_impact) {
-          setHealthData(data.health_impact);
-        } else {
-          // Handle case where health_impact might be directly in root or different structure
-          // Based on backend: return jsonify({'health_impact': ..., 'status': ...})
-          console.error("Unexpected response format", data);
-          setError("Invalid response format");
-        }
-
-      } catch (err) {
-        console.error("Error fetching health impact:", err);
-        setError("Could not load health impact analysis.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHealthImpact();
-  }, [aqiData]);
-
-  if (loading) {
+  if (isAnalyzing) {
     return (
-      <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg mt-4 animate-pulse">
-        <div className="h-6 bg-slate-800 rounded w-1/3 mb-4"></div>
-        <div className="h-4 bg-slate-800 rounded w-full mb-2"></div>
-        <div className="h-4 bg-slate-800 rounded w-full mb-2"></div>
-        <div className="h-4 bg-slate-800 rounded w-5/6 mb-2"></div>
+      <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 shadow-lg mt-4 flex flex-col items-center justify-center text-center">
+        <div className="relative w-16 h-16 mb-4">
+          <div className="absolute inset-0 border-4 border-slate-700 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+          <Stethoscope className="absolute inset-0 m-auto text-blue-400 w-6 h-6 animate-pulse" />
+        </div>
+        <h3 className="text-xl font-bold text-white mb-2">Analyzing Health Impact...</h3>
+        <p className="text-slate-400 max-w-md">
+          Our AI is processing the current air quality data to provide personalized health recommendations.
+        </p>
       </div>
     );
   }
 
-  if (error) {
+  if (!healthAnalysis) {
     return (
-      <div className="bg-red-900/20 border border-red-700/50 rounded-xl p-5 shadow-lg mt-4 text-red-200 text-sm">
-        {error}
+      <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 shadow-lg mt-4 text-center">
+        <div className="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Stethoscope className="w-8 h-8 text-blue-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white mb-3">Health Impact Analysis</h3>
+        <p className="text-slate-400 max-w-lg mx-auto mb-6">
+          Generate a comprehensive AI-powered analysis of the current air quality's impact on health, including age-specific risks and immediate safeguards.
+        </p>
+        <button
+          onClick={generateHealthAnalysis}
+          className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 mx-auto transition-all shadow-lg hover:shadow-cyan-500/20"
+        >
+          <Sparkles className="w-5 h-5" />
+          Generate AI Analysis
+        </button>
       </div>
     );
   }
-
-  if (!healthData) return null;
 
   const getUrgencyColor = (level: string) => {
     switch (level.toLowerCase()) {
@@ -117,14 +64,14 @@ export function HealthImpact({ aqiData }: HealthImpactProps) {
           <Stethoscope className="w-5 h-5" />
           Health Impact Analysis
         </h3>
-        <span className={`font-bold text-sm uppercase tracking-wider ${getUrgencyColor(healthData.urgency_level)}`}>
-          {healthData.urgency_level} Risk
+        <span className={`font-bold text-sm uppercase tracking-wider ${getUrgencyColor(healthAnalysis.urgency_level)}`}>
+          {healthAnalysis.urgency_level} Risk
         </span>
       </div>
 
       <div className="mb-6">
         <p className="text-slate-300 text-sm leading-relaxed italic border-l-4 border-blue-500 pl-3">
-          "{healthData.risk_summary}"
+          "{healthAnalysis.risk_summary}"
         </p>
       </div>
 
@@ -137,19 +84,19 @@ export function HealthImpact({ aqiData }: HealthImpactProps) {
           <div className="space-y-2 text-sm">
             <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
               <span className="text-blue-300">Newborns</span>
-              <span className="text-slate-300">{healthData.age_specific_impacts.newborns}</span>
+              <span className="text-slate-300">{healthAnalysis.age_specific_impacts.newborns}</span>
             </div>
             <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
               <span className="text-blue-300">Children</span>
-              <span className="text-slate-300">{healthData.age_specific_impacts.children}</span>
+              <span className="text-slate-300">{healthAnalysis.age_specific_impacts.children}</span>
             </div>
             <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
               <span className="text-blue-300">Adults</span>
-              <span className="text-slate-300">{healthData.age_specific_impacts.adults_36_65}</span>
+              <span className="text-slate-300">{healthAnalysis.age_specific_impacts.adults_36_65}</span>
             </div>
             <div className="grid grid-cols-[100px_1fr] gap-2 items-start">
               <span className="text-blue-300">Elderly</span>
-              <span className="text-slate-300">{healthData.age_specific_impacts.elderly}</span>
+              <span className="text-slate-300">{healthAnalysis.age_specific_impacts.elderly}</span>
             </div>
           </div>
         </div>
@@ -160,7 +107,7 @@ export function HealthImpact({ aqiData }: HealthImpactProps) {
             Required Safeguards
           </h4>
           <ul className="space-y-2">
-            {healthData.safeguard_protocols.map((protocol, idx) => (
+            {healthAnalysis.safeguard_protocols.map((protocol, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
                 <Shield className="w-4 h-4 text-green-400" />
                 {protocol}
@@ -171,7 +118,7 @@ export function HealthImpact({ aqiData }: HealthImpactProps) {
             Immediate Actions
           </h4>
           <ul className="space-y-2">
-            {healthData.immediate_actions.map((action, idx) => (
+            {healthAnalysis.immediate_actions.map((action, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
                 <Zap className="w-4 h-4 text-yellow-400" />
                 {action}
@@ -188,10 +135,10 @@ export function HealthImpact({ aqiData }: HealthImpactProps) {
             Long Term Impact
           </h4>
           <p className="text-red-400 font-bold text-sm">
-            Life Expectancy Loss: <span className="text-white">{healthData.long_term_risk.life_expectancy_loss}</span>
+            Life Expectancy Loss: <span className="text-white">{healthAnalysis.long_term_risk.life_expectancy_loss}</span>
           </p>
           <p className="text-slate-400 text-xs mt-1">
-            {healthData.long_term_risk.chronic_conditions}
+            {healthAnalysis.long_term_risk.chronic_conditions}
           </p>
         </div>
         <div>
@@ -200,22 +147,22 @@ export function HealthImpact({ aqiData }: HealthImpactProps) {
           </h4>
           <div className="space-y-2 mt-1">
             <div className="text-xs text-blue-200 bg-slate-800/50 p-2 rounded border border-slate-700">
-              <span className="font-bold text-blue-400">Asthma:</span> {healthData.pre_existing_conditions.asthma}
+              <span className="font-bold text-blue-400">Asthma:</span> {healthAnalysis.pre_existing_conditions.asthma}
             </div>
-            {healthData.pregnancy_risks && healthData.pregnancy_risks.length > 5 && (
+            {healthAnalysis.pregnancy_risks && healthAnalysis.pregnancy_risks.length > 5 && (
               <div className="text-xs text-blue-200 bg-slate-800/50 p-2 rounded border border-slate-700">
-                <span className="font-bold text-blue-400">Pregnancy:</span> {healthData.pregnancy_risks}
+                <span className="font-bold text-blue-400">Pregnancy:</span> {healthAnalysis.pregnancy_risks}
               </div>
             )}
             <div className="text-xs text-blue-200 bg-slate-800/50 p-2 rounded border border-slate-700">
-              <span className="font-bold text-blue-400">Conditions:</span> {healthData.pre_existing_conditions.cardiovascular} / {healthData.pre_existing_conditions.diabetes}
+              <span className="font-bold text-blue-400">Conditions:</span> {healthAnalysis.pre_existing_conditions.cardiovascular} / {healthAnalysis.pre_existing_conditions.diabetes}
             </div>
           </div>
         </div>
       </div>
 
       {/* Interactive Health Chat */}
-      <HealthChat aqiContext={{ ...aqiData, risk_summary: healthData.risk_summary }} />
+      <HealthChat aqiContext={{ ...aqiData, risk_summary: healthAnalysis.risk_summary }} />
     </div>
   );
 }

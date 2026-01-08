@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { API_BASE_URL } from '../config';
+import React, { useEffect } from 'react';
+import { useGlobalState } from '../context/GlobalStateContext';
 import { HealthImpact } from './HealthImpact';
 import { CloudFog, RefreshCcw } from 'lucide-react';
 
 interface AQIData {
-  aqi: number;  // 0-500 scale from Ambee
+  aqi: number;
   aqi_category: string;
   pm2_5: number;
   pm10: number;
@@ -17,63 +17,13 @@ interface AQIData {
 }
 
 export function LiveAQI({ onAqiUpdate }: { onAqiUpdate?: (aqi: number) => void }) {
-  const [aqi, setAqi] = useState<AQIData | null>(null);
-
-
-
-  const fetchAQI = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/aqi?lat=28.7041&lon=77.1025`);
-      if (!response.ok) {
-        console.error(`API error: ${response.status}. Using mock data for development.`);
-        // Fallback mock data for development
-        const mockData = {
-          aqi: 50,
-          aqi_category: 'Good',
-          pm2_5: 12.5,
-          pm10: 25.0,
-          o3: 45.2,
-          no2: 28.5,
-          so2: 8.1,
-          co: 0.5
-        };
-        setAqi(mockData);
-        if (onAqiUpdate) onAqiUpdate(mockData.aqi);
-        return;
-      }
-      const data = await response.json();
-      setAqi(data);
-      if (onAqiUpdate) onAqiUpdate(data.aqi);
-    } catch (error) {
-      console.error('Failed to fetch AQI data:', error);
-      console.log('Backend not running? Make sure to run: cd backend && python app.py');
-      // Fallback mock data for development
-      const mockData = {
-        aqi: 50,
-        aqi_category: 'Good',
-        pm2_5: 12.5,
-        pm10: 25.0,
-        o3: 45.2,
-        no2: 28.5,
-        so2: 8.1,
-        co: 0.5
-      };
-      setAqi(mockData);
-      if (onAqiUpdate) onAqiUpdate(mockData.aqi);
-    }
-  };
+  const { aqiData: aqi, isLoading, refreshAQI } = useGlobalState();
 
   useEffect(() => {
-    const initializeAQI = async () => {
-      await fetchAQI();
-    };
-
-    initializeAQI();
-    const interval = setInterval(fetchAQI, 600000); // Refresh every 10 min
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+    if (aqi && onAqiUpdate) {
+      onAqiUpdate(aqi.aqi);
+    }
+  }, [aqi, onAqiUpdate]);
 
   const getAQIColor = (aqi: number) => {
     // Standard AQI Scale (India/global mix adaptation)
@@ -94,7 +44,7 @@ export function LiveAQI({ onAqiUpdate }: { onAqiUpdate?: (aqi: number) => void }
     return 'Severe';
   };
 
-  if (!aqi) return <div className="text-slate-400">Loading AQI...</div>;
+  if (isLoading || !aqi) return <div className="text-slate-400">Loading AQI...</div>;
 
   return (
     <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg">
@@ -104,7 +54,7 @@ export function LiveAQI({ onAqiUpdate }: { onAqiUpdate?: (aqi: number) => void }
           Live AQI
         </h3>
         <button
-          onClick={fetchAQI}
+          onClick={refreshAQI}
           className="text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white flex items-center gap-1"
         >
           <RefreshCcw className="w-3 h-3" /> Refresh

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { aqiCategories, type AQICategory } from "../data/aqiHealthData";
+import { useGlobalState } from "../context/GlobalStateContext";
 import {
   Baby,
   Smile,
@@ -110,29 +111,31 @@ function VulnerableGroupCard({
 }
 
 export default function AQIHealthImpact() {
+  const { aqiData } = useGlobalState();
+  const currentAqiValue = aqiData?.aqi ?? null;
+
   const [selectedCategory, setSelectedCategory] = useState<AQICategory>(
     aqiCategories[0]
   );
-  const [currentAqiValue, setCurrentAqiValue] = useState<number | null>(null);
 
-  const handleAqiUpdate = (aqi: number) => {
-    setCurrentAqiValue(aqi);
+  useEffect(() => {
+    if (currentAqiValue !== null) {
+      // Find category that matches the AQI range
+      // Mappings: 0-50, 51-100, 101-200, 201-300, 301-400, 401+
+      const categoryId =
+        currentAqiValue <= 50 ? "good" :
+          currentAqiValue <= 100 ? "satisfactory" :
+            currentAqiValue <= 200 ? "moderate" :
+              currentAqiValue <= 300 ? "poor" :
+                currentAqiValue <= 400 ? "very-poor" :
+                  "severe";
 
-    // Find category that matches the AQI range
-    // Mappings: 0-50, 51-100, 101-200, 201-300, 301-400, 401+
-    const categoryId =
-      aqi <= 50 ? "good" :
-        aqi <= 100 ? "satisfactory" :
-          aqi <= 200 ? "moderate" :
-            aqi <= 300 ? "poor" :
-              aqi <= 400 ? "very-poor" :
-                "severe";
-
-    const matchedCategory = aqiCategories.find(c => c.id === categoryId);
-    if (matchedCategory && matchedCategory.id !== selectedCategory.id) {
-      setSelectedCategory(matchedCategory);
+      const matchedCategory = aqiCategories.find(c => c.id === categoryId);
+      if (matchedCategory && matchedCategory.id !== selectedCategory.id) {
+        setSelectedCategory(matchedCategory);
+      }
     }
-  };
+  }, [currentAqiValue]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative">
@@ -141,8 +144,8 @@ export default function AQIHealthImpact() {
       {currentAqiValue !== null && (
         <div className="fixed top-24 right-6 z-50 bg-slate-900/90 backdrop-blur-md border border-slate-700 px-4 py-2 rounded-full shadow-2xl flex items-center gap-3">
           <div className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" style={{backgroundColor: currentAqiValue <= 100 ? "#22c55e" : "#ef4444"}}></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" style={{backgroundColor: currentAqiValue <= 100 ? "#22c55e" : "#ef4444"}}></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" style={{ backgroundColor: currentAqiValue <= 100 ? "#22c55e" : "#ef4444" }}></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" style={{ backgroundColor: currentAqiValue <= 100 ? "#22c55e" : "#ef4444" }}></span>
           </div>
           <div className="text-sm font-bold text-white">
             <span className="opacity-70 mr-2">Live AQI:</span>
@@ -269,7 +272,7 @@ export default function AQIHealthImpact() {
         {/* Live Data Section (Moved to Bottom) */}
         <div className="mt-16 pt-8 border-t border-slate-800">
           <h3 className="text-lg font-semibold text-slate-400 mb-4">Live Data Source</h3>
-          <LiveAQI onAqiUpdate={handleAqiUpdate} />
+          <LiveAQI />
         </div>
       </div>
     </div>
