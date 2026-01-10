@@ -164,14 +164,14 @@ export function ScenarioComparison() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-8">
+    <div className="min-h-screen p-8 text-slate-200">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-            <BarChart2 className="w-10 h-10 text-blue-600" /> Scenario Comparison
+          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3 text-white">
+            <BarChart2 className="w-10 h-10 text-blue-500" /> Scenario Comparison
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate-400">
             Compare different policy approaches side-by-side to understand
             their system-wide impact.
           </p>
@@ -179,7 +179,7 @@ export function ScenarioComparison() {
 
         {/* Scenario Selector */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Select Scenarios</h2>
+          <h2 className="text-xl font-semibold mb-4 text-white">Select Scenarios</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {scenarios.map((scenario) => (
               <button
@@ -191,30 +191,30 @@ export function ScenarioComparison() {
                       : [...prev, scenario.id]
                   )
                 }
-                className={`p-4 rounded-lg border-2 transition-all text-left ${selectedScenarios.includes(scenario.id)
-                  ? "border-blue-500 bg-blue-50 shadow-md"
-                  : "border-gray-300 bg-white hover:border-gray-400"
+                className={`p-4 rounded-xl border text-left transition-all duration-200 ${selectedScenarios.includes(scenario.id)
+                  ? "bg-blue-600/20 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                  : "bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-600"
                   }`}
               >
-                <div className="text-lg font-bold mb-1">
+                <div className="text-lg font-bold mb-1 text-white">
                   {scenario.display_name}
                 </div>
-                <div className="text-sm text-gray-600 mb-3">
+                <div className="text-sm text-slate-400 mb-3">
                   {scenario.description}
                 </div>
-                <div className="text-xs text-gray-500 space-y-1">
+                <div className="text-xs text-slate-500 space-y-1">
                   <div>
-                    <strong>CO₂:</strong> {scenario.expected_co2_reduction}
+                    <strong className="text-slate-400">CO₂:</strong> {scenario.expected_co2_reduction}
                   </div>
                   <div>
-                    <strong>AQI:</strong> {scenario.expected_aqi_improvement}
+                    <strong className="text-slate-400">AQI:</strong> {scenario.expected_aqi_improvement}
                   </div>
                   <div>
-                    <strong>Difficulty:</strong>{" "}
+                    <strong className="text-slate-400">Difficulty:</strong>{" "}
                     {scenario.implementation_difficulty}
                   </div>
                   <div>
-                    <strong>Timeline:</strong> {scenario.timeline_years} years
+                    <strong className="text-slate-400">Timeline:</strong> {scenario.timeline_years} years
                   </div>
                 </div>
               </button>
@@ -225,8 +225,8 @@ export function ScenarioComparison() {
             onClick={handleCompare}
             disabled={loading || selectedScenarios.length === 0}
             className={`px-8 py-3 rounded-lg font-semibold text-white transition-all ${loading || selectedScenarios.length === 0
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 shadow-lg"
+              ? "bg-slate-700 cursor-not-allowed text-slate-500"
+              : "bg-blue-600 hover:bg-blue-500 shadow-lg hover:shadow-blue-500/20"
               }`}
           >
             {loading ? (
@@ -246,24 +246,24 @@ export function ScenarioComparison() {
           <div className="space-y-8">
             {/* Ranking Summary */}
             {ranking && (
-              <div className="bg-white rounded-lg p-6 shadow-lg border-l-4 border-green-500">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <div className="glass-panel rounded-xl p-6 border-l-4 border-l-emerald-500">
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
                   <Trophy className="w-6 h-6 text-yellow-500" /> Rankings
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded">
-                    <div className="text-sm text-gray-600 mb-1">
+                  <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                    <div className="text-sm text-blue-200 mb-1">
                       Best CO₂ Reduction
                     </div>
-                    <div className="font-bold text-lg text-blue-700">
+                    <div className="font-bold text-lg text-blue-400">
                       {ranking.best_co2_reduction}
                     </div>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded">
-                    <div className="text-sm text-gray-600 mb-1">
+                  <div className="p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                    <div className="text-sm text-emerald-200 mb-1">
                       Best AQI Improvement
                     </div>
-                    <div className="font-bold text-lg text-emerald-700">
+                    <div className="font-bold text-lg text-emerald-400">
                       {ranking.best_aqi_improvement}
                     </div>
                   </div>
@@ -276,26 +276,26 @@ export function ScenarioComparison() {
               {comparison.map((result, idx) => (
                 <div
                   key={idx}
-                  className="bg-white rounded-lg p-6 shadow-lg border-t-4 border-blue-500"
+                  className="glass-panel rounded-xl p-6 border-t-4 border-t-blue-500"
                 >
-                  <h3 className="text-lg font-bold mb-4">{result.name}</h3>
+                  <h3 className="text-lg font-bold mb-4 text-white">{result.name}</h3>
                   <ImpactPanel impact={result.impact} />
                 </div>
               ))}
             </div>
 
             {/* Detailed Comparison Table */}
-            <div className="bg-white rounded-lg p-6 shadow-lg overflow-x-auto">
-              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <LineChart className="w-6 h-6 text-blue-500" /> Detailed Comparison
+            <div className="glass-panel rounded-xl p-6 overflow-x-auto">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white">
+                <LineChart className="w-6 h-6 text-blue-400" /> Detailed Comparison
               </h3>
               <table className="w-full text-sm">
-                <thead className="border-b-2 border-gray-300">
+                <thead className="border-b border-slate-700">
                   <tr>
-                    <th className="text-left font-bold p-3">Scenario</th>
-                    <th className="text-center font-bold p-3">CO₂ Change</th>
-                    <th className="text-center font-bold p-3">AQI Change</th>
-                    <th className="text-center font-bold p-3">
+                    <th className="text-left font-bold p-3 text-slate-300">Scenario</th>
+                    <th className="text-center font-bold p-3 text-slate-300">CO₂ Change</th>
+                    <th className="text-center font-bold p-3 text-slate-300">AQI Change</th>
+                    <th className="text-center font-bold p-3 text-slate-300">
                       Most Affected Sector
                     </th>
                   </tr>
@@ -304,13 +304,13 @@ export function ScenarioComparison() {
                   {comparison.map((result, idx) => (
                     <tr
                       key={idx}
-                      className="border-b border-gray-200 hover:bg-gray-50"
+                      className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors"
                     >
-                      <td className="p-3 font-semibold">{result.name}</td>
+                      <td className="p-3 font-semibold text-white">{result.name}</td>
                       <td
                         className={`text-center p-3 font-bold ${result.impact.co2.change_pct < 0
-                          ? "text-green-600"
-                          : "text-red-600"
+                          ? "text-emerald-400"
+                          : "text-rose-400"
                           }`}
                       >
                         {result.impact.co2.change_pct > 0 ? "+" : ""}
@@ -318,14 +318,14 @@ export function ScenarioComparison() {
                       </td>
                       <td
                         className={`text-center p-3 font-bold ${result.impact.aqi.change_pct < 0
-                          ? "text-green-600"
-                          : "text-red-600"
+                          ? "text-emerald-400"
+                          : "text-rose-400"
                           }`}
                       >
                         {result.impact.aqi.change_pct > 0 ? "+" : ""}
                         {result.impact.aqi.change_pct.toFixed(1)}%
                       </td>
-                      <td className="text-center p-3 text-gray-600">
+                      <td className="text-center p-3 text-slate-400">
                         {result.impact.cascade_analysis.most_affected_nodes[0]
                           ? result.impact.cascade_analysis.most_affected_nodes[0][0]
                           : "N/A"}
@@ -340,7 +340,7 @@ export function ScenarioComparison() {
 
         {/* Empty State */}
         {!comparison && (
-          <div className="bg-white rounded-lg p-12 shadow-lg text-center text-gray-500">
+          <div className="glass-panel rounded-xl p-12 text-center text-slate-500">
             <p className="text-lg">
               Select scenarios and click "Compare" to see results
             </p>

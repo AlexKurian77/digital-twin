@@ -12,6 +12,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { ImpactPanel } from "./ImpactPanel";
 import { API_BASE_URL } from '../config';
+import { Sparkles, ArrowRight, Activity, Search, Loader2 } from "lucide-react";
 
 import CausalNode from "./nodes/CausalNode";
 import { initialNodes } from "../data/nodes";
@@ -50,6 +51,33 @@ interface Impact {
 export default function CausalGraph() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Callback to handle slider changes from custom nodes
+  const handleNodeValueChange = (id: string, value: number) => {
+    setNodes((nds) => {
+      const updated = nds.map((node) => {
+        if (node.id === id) {
+          return { ...node, data: { ...node.data, value } };
+        }
+        return node;
+      });
+      return runSimulation(updated, edges);
+    });
+  };
+
+  // Attach the handler to nodes on mount
+  useEffect(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onChange: (val: number) => handleNodeValueChange(node.id, val),
+        },
+      }))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [impactMessage, setImpactMessage] = useState(
     "System activity and emissions propagate through connected sectors."
   );
@@ -57,19 +85,36 @@ export default function CausalGraph() {
   const [policy, setPolicy] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [researchQuery, setResearchQuery] = useState(
-    "How did Beijing reduce transport emissions?"
+    "Generate a policy based on the graph"
   );
 
   const applyPolicyFromAPI = async () => {
     setLoading(true);
     try {
+
       // Step 1: Generate policy from research query
+      const graphContext = {
+        nodes: nodes.map((n) => ({
+          id: n.id,
+          enabled: n.data.enabled,
+          label: n.data.label
+        })),
+        edges: edges.map((e) => ({
+          source: e.source,
+          target: e.target,
+          weight: e.data?.weight || 0.5,
+        })),
+      };
+
       const generateResponse = await fetch(
         `${API_BASE_URL}/api/generate-policy`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ research_query: researchQuery }),
+          body: JSON.stringify({
+            research_query: researchQuery,
+            graph_context: graphContext
+          }),
         }
       );
 
@@ -88,7 +133,7 @@ export default function CausalGraph() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ policy }),
+          body: JSON.stringify({ policy, graph_context: graphContext }),
         }
       );
 
@@ -171,14 +216,13 @@ export default function CausalGraph() {
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   return (
-    <div className={`w-full min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 ${isFullScreen ? 'relative z-[100]' : ''}`}>
-
+    <div className={`w-full min-h-screen ${isFullScreen ? 'relative z-[100]' : ''}`}>
 
       {/* Graph Container - scrollable, natural height */}
       <div
         className={`${isFullScreen
-          ? 'fixed inset-0 z-50 w-screen h-screen bg-slate-900 z-100'
-          : 'w-full h-96 bg-slate-900 border-b border-slate-700'
+          ? 'fixed inset-0 z-60 w-screen h-screen bg-slate-900'
+          : 'w-full h-[500px] border-b border-white/10'
           }`}
       >
         <ReactFlow
@@ -191,26 +235,18 @@ export default function CausalGraph() {
           fitView
           colorMode="dark"
         >
-          <Background color="#334155" gap={16} />
+          <Background color="#94a3b8" gap={20} size={1} />
           <Controls
-            className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl overflow-hidden"
+            className="!bg-slate-800/80 !border-slate-700 !backdrop-blur-md"
             style={{
-              backgroundColor: '#1a1f26ff',
-              color: '#f8fafc',
-              borderColor: '#334155',
-              '--xy-controls-button-bg': '#1e293b',
-              '--xy-controls-button-bg-hover': '#334155',
-              '--xy-controls-button-color': '#f8fafc',
-              '--xy-controls-button-border-color': '#334155',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '4px'
+              padding: '4px',
+              borderRadius: '8px',
             } as React.CSSProperties}
           >
             <ControlButton
               onClick={() => setIsFullScreen(!isFullScreen)}
               title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
-              style={{ fontWeight: 'bold' }}
+              className="!bg-slate-700/50 hover:!bg-slate-600 !text-slate-200 !border-none"
             >
               {isFullScreen ? "↙" : "↗"}
             </ControlButton>
@@ -218,92 +254,94 @@ export default function CausalGraph() {
         </ReactFlow>
 
       </div>
+
       {/* Instructions */}
-      <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-slate-700/50 rounded-lg p-4">
-        <p className="text-xs text-slate-400 text-center">
-          💡 <strong>Tip:</strong> Click on nodes in the graph to
-          disable/enable sectors. Enter a research query and click Generate
-          & Apply to test policies.
+      <div className="bg-blue-900/20 border-y border-blue-500/10 p-3">
+        <p className="text-xs text-blue-200/80 text-center flex items-center justify-center gap-2">
+          <Sparkles className="w-3 h-3" />
+          <strong>Tip:</strong> Click on nodes in the graph to disable/enable sectors.
         </p>
       </div>
 
       {/* Bottom Section - Control Panel & Results */}
-      <div className="bg-slate-900 px-6 py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Controls & Results Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            {/* Left: Policy Generator */}
-            <div className="lg:col-span-1 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="flex items-center mb-4">
-                <span className="text-2xl mr-2">🔬</span>
-                <h3 className="text-lg font-bold text-white">
-                  Policy Generator
-                </h3>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-semibold block mb-2 text-slate-300 uppercase tracking-wide">
-                    Research Query
-                  </label>
-                  <textarea
-                    value={researchQuery}
-                    onChange={(e) => setResearchQuery(e.target.value)}
-                    placeholder="What policy question do you want to explore?"
-                    className="w-full text-sm border border-slate-600 rounded-lg p-3 bg-slate-950 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    rows={3}
-                  />
-                </div>
-                <button
-                  onClick={applyPolicyFromAPI}
-                  disabled={loading}
-                  className={`w-full px-4 py-3 rounded-lg font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 ${loading
-                    ? "bg-slate-600 cursor-not-allowed opacity-60"
-                    : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                    }`}
-                >
-                  {loading ? (
-                    <>
-                      <span className="animate-spin">⏳</span>
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      Generate & Apply
-                    </>
-                  )}
-                </button>
-              </div>
+      <div className="px-6 py-12 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Left: Policy Generator */}
+          <div className="lg:col-span-1 glass-panel rounded-2xl p-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Search className="w-24 h-24 text-blue-400" />
             </div>
 
-            {/* Right: Results (2 columns) */}
-            <div className="lg:col-span-2">
-              {impact ? (
-                <ImpactPanel impact={impact} policy={policy} />
-              ) : (
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-5 shadow-lg">
-                  <div className="flex items-start gap-4">
-                    <span className="text-3xl flex-shrink-0">ℹ️</span>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-white mb-2 uppercase text-sm tracking-wide">
-                        System Status
-                      </h4>
-                      <p className="text-slate-300 leading-relaxed">
-                        {impactMessage}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div className="flex items-center mb-6 relative z-10">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center mr-3 border border-blue-400/20">
+                <Sparkles className="w-5 h-5 text-blue-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white tracking-tight">
+                Policy Cloud
+              </h3>
             </div>
-            <div className="lg:col-span-3 mt-6">
-              {/* <LiveAQI /> */}
-              <EmissionForecast />
+
+            <div className="space-y-4 relative z-10">
+              <div>
+                <label className="text-xs font-semibold block mb-2 text-blue-200/60 uppercase tracking-widest">
+                  Research Query
+                </label>
+                <textarea
+                  value={researchQuery}
+                  onChange={(e) => setResearchQuery(e.target.value)}
+                  placeholder="e.g. How can we reduce transport emissions by 20%?"
+                  className="w-full text-sm rounded-xl p-4 min-h-[120px] resize-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium leading-relaxed"
+                />
+              </div>
+              <button
+                onClick={applyPolicyFromAPI}
+                disabled={loading}
+                className={`w-full py-4 rounded-xl font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 group/btn ${loading
+                  ? "bg-slate-700 cursor-not-allowed opacity-60"
+                  : "bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5"
+                  }`}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin w-5 h-5" />
+                    Analyzing System...
+                  </>
+                ) : (
+                  <>
+                    Generate Policy
+                    <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
+          {/* Right: Results (2 columns) */}
+          <div className="lg:col-span-2">
+            {impact ? (
+              <ImpactPanel impact={impact} policy={policy} />
+            ) : (
+              <div className="glass-panel rounded-2xl p-8 h-full flex flex-col items-center justify-center text-center opacity-80 hover:opacity-100 transition-opacity">
+                <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 border border-slate-700/50">
+                  <Activity className="w-8 h-8 text-slate-500" />
+                </div>
+                <h4 className="font-bold text-white mb-2 text-lg">
+                  System Status
+                </h4>
+                <p className="text-slate-400/80 leading-relaxed max-w-md mx-auto">
+                  {impactMessage}
+                </p>
+              </div>
+            )}
+          </div>
 
+          <div className="lg:col-span-3 mt-4">
+            <EmissionForecast />
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+

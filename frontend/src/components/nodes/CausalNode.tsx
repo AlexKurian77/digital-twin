@@ -7,6 +7,7 @@ export type NodeData = {
   value: number;
   enabled: boolean;
   type: "sector" | "intermediate" | "output";
+  onChange?: (value: number) => void;
 };
 
 export default function CausalNode({ data }: { data: NodeData }) {
@@ -28,9 +29,23 @@ export default function CausalNode({ data }: { data: NodeData }) {
         {data.label}
       </div>
 
-      {data.type !== "intermediate" && (
-        <div className="text-xs text-slate-500 font-normal mt-1 border-t border-slate-200 pt-1">
-          Activity: {data.value.toFixed(0)}%
+      {data.type === "sector" && (
+        <div className="mt-2 w-full">
+          <div className="flex justify-between text-xs text-slate-500 mb-1 font-medium">
+            <span>Activity</span>
+            <span>{Math.round(data.value)}%</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={data.value}
+            className="nodrag w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-500 transition-all"
+            onChange={(e) => {
+              data.onChange?.(Number(e.target.value));
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
 
