@@ -101,7 +101,7 @@ export function AQITrends() {
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Wind className="w-5 h-5 text-blue-400" /> AQI Trends & AI Forecast
                 </h3>
-                
+
             </div>
 
             <div className="h-[300px] w-full">
@@ -148,7 +148,7 @@ export function AQITrends() {
                 </ResponsiveContainer>
             </div>
             <p className="text-xs text-slate-500 text-center mt-2">
-                Historical monthly averages
+                Historical monthly averages + AI prediction for next 6 months.
             </p>
         </div>
     );
