@@ -19,6 +19,7 @@ import { initialNodes } from "../data/nodes";
 import { initialEdges } from "../data/edges";
 import { runSimulation } from "./simulation";
 import { EmissionForecast } from "./EmissionForecast";
+import { AQITrends } from "./AQITrends";
 import type { NodeTypes } from "@xyflow/react";
 
 const nodeTypes: NodeTypes = {
@@ -335,8 +336,9 @@ export default function CausalGraph() {
             )}
           </div>
 
-          <div className="lg:col-span-3 mt-4">
+          <div className="lg:col-span-3 mt-4 space-y-6">
             <EmissionForecast />
+            <AQITrends />
           </div>
         </div>
       </div>
